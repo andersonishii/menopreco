@@ -38,3 +38,15 @@ export function fuelPriceVariations<T extends DatedOffer>(offers:T[]){
  for(const group of buckets.values()){const stats=priceSummary(group);if(stats&&stats.min<stats.max)for(const offer of group)if(offer.id)variations.set(offer.id,{min:stats.min,max:stats.max});}
  return variations;
 }
+export const priceBenefitsWarning='Encontramos preços diferentes para este produto no mesmo estabelecimento. O menor preço pode depender de vantagens do cliente, como programa de fidelidade, aplicativo, cupom ou forma de pagamento. Os valores também podem ter mudado entre as datas das notas. Confirme as condições antes de comprar.';
+export function productPriceVariations<T extends DatedOffer>(offers:T[]){
+ const buckets=new Map<string,T[]>();
+ for(const offer of offers){const store=offer.estabelecimento;
+  const identity=store?.cnpj||store?.id||(store?.nm_logr&&store.mun?[store.nm_emp,store.tp_logr,store.nm_logr,store.nr_logr,store.bairro,store.mun].join('|'):null);
+  const code=String(offer.gtin??'').trim();const product=/^(\d{8}|\d{12,14})$/.test(code)&&!/^0+$/.test(code)?code.padStart(14,'0'):offer.desc?.trim().toUpperCase();
+  if(!identity||!product||!offer.id)continue;const key=[product,identity].join('|');const group=buckets.get(key)||[];group.push(offer);buckets.set(key,group);
+ }
+ const variations=new Set<string>();
+ for(const group of buckets.values()){const stats=priceSummary(group);if(stats&&stats.min<stats.max)for(const offer of group)if(offer.id)variations.add(offer.id);}
+ return variations;
+}

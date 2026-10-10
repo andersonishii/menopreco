@@ -25,3 +25,5 @@
 .camera-preview video{object-fit:contain;max-height:none}.barcode-camera label{display:block;margin:14px 0 6px}.barcode-camera select{width:100%;padding:10px;border:1px solid #dce4d7;border-radius:8px;background:white}
 
 .fuel-card.fuel-price-variation{border:2px solid #d5ae56;background:#fffdf7}.fuel-benefit-badge{display:inline-block;background:#fff0c8;color:#765512;border-radius:6px;padding:6px 8px;font-size:11px;line-height:1.5}
+
+.product-group.product-price-variation,.shopping-item.product-price-variation{border:2px solid #d5ae56;background:#fffdf7}

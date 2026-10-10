@@ -7,6 +7,11 @@ export function fullAddress(store?:Store){
  return [street,store.complemento||store.nm_compl,store.bairro,city,(store.cep||store.nr_cep)?'CEP '+(store.cep||store.nr_cep):''].filter(Boolean).join(' · ')||'Endereço não informado';
 }
 type DatedOffer={id?:string;gtin?:string;desc?:string;datahora?:string;valor?:string;valor_tabela?:string;estabelecimento?:Store};
+export function priceSummary(offers:DatedOffer[]){
+ const prices=offers.map(o=>Number(o.valor_tabela??o.valor)).filter(p=>Number.isFinite(p)&&p>0);
+ if(!prices.length)return null;
+ return {min:Math.min(...prices),max:Math.max(...prices),average:prices.reduce((sum,p)=>sum+p,0)/prices.length,count:prices.length};
+}
 export function recentPriceOrder(a:DatedOffer,b:DatedOffer){
  const day=(o:DatedOffer)=>o.datahora?saleDay(o.datahora)||'':'';
  const price=(o:DatedOffer)=>Number(o.valor_tabela??o.valor)||Infinity;

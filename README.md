@@ -27,7 +27,7 @@ A implementação original na raiz continua preparada para Cloudflare/Sites. Seu
 
 ## Ativar cadastro e créditos
 
-1. No Supabase, abra SQL Editor e execute `supabase/credits.sql` e depois `supabase/required-login.sql`. As tabelas ficam protegidas por RLS e são acessíveis somente ao servidor.
+1. No Supabase, abra SQL Editor e execute `supabase/credits.sql` e depois `supabase/required-login.sql` e `supabase/unlimited-access.sql`. As tabelas ficam protegidas por RLS e são acessíveis somente ao servidor.
 2. No Render → Environment, configure:
    - `NEXT_PUBLIC_SUPABASE_URL`: URL base do projeto.
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Publishable key.
@@ -49,3 +49,5 @@ Cada nova busca por descrição, código de barras ou combustível consome um cr
 Pagamento aprovado de R$ 5,00 em BRL para o vendedor da integração libera 10 consultas no pedido registrado; notificações repetidas não duplicam créditos. O redirecionamento do checkout nunca libera créditos sozinho. Confira o saldo em Minha conta após a notificação. Use a frase “Oferta de lançamento: R$ 5,00”, sem referência a preço anterior não comprovado.
 
 Verificações locais: `node verify-access.mjs` e `npm run build` em render-app. A integração real requer executar o SQL e configurar os serviços externos; isso não é feito pelo build.
+
+A coluna `credit_accounts.unlimited_access` permite consultas ilimitadas quando `true`, sem consumir saldo. Somente o administrador no Supabase ou o servidor pode alterá-la; não há opção pública para ativação. A conta continua exigindo login e e-mail confirmado.

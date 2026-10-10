@@ -6,3 +6,5 @@
 .card-gtin{font-size:10px;color:#839477;margin:0 0 15px;overflow-wrap:anywhere}.offer-order{display:grid;gap:7px;font-size:11px;color:#5b7451;margin:14px 0}.offer-order select{width:100%;min-width:0;border:1px solid #dce4d7;border-radius:7px;background:white;padding:9px;color:#486b45;font-size:11px}
 
 .shopping-policy{grid-template-columns:1fr minmax(220px,380px)}@media(max-width:700px){.shopping-policy{grid-template-columns:1fr}}
+
+.city-panel{background:white;border:1px solid #dce4d7;border-radius:17px;margin-bottom:20px}.city-panel small{display:block;margin-top:12px;color:#7a847b}.city-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.city-options button{background:#eef4e6;border:1px solid #dce4d7;border-radius:8px;padding:10px;color:#217448}

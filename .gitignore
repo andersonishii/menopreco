@@ -46,3 +46,12 @@ next-env.d.ts
 /work/
 /.npm-cache/
 *.tsbuildinfo
+
+# Arquivos gerados pela versão Node para Render
+/render-app/app/
+/render-app/components/
+/render-app/lib/
+/render-app/public/
+/render-app/next-env.d.ts
+/render-app/node_modules/
+/render-app/.next/

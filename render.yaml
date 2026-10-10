@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: menor-preco-diagnostico
+    name: preco-perto
     runtime: node
     plan: free
-    rootDir: diagnostico
-    buildCommand: node --check server.mjs
+    rootDir: render-app
+    buildCommand: npm ci && npm run build
     startCommand: npm start
-    healthCheckPath: /health
+    healthCheckPath: /

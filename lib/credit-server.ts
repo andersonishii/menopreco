@@ -13,5 +13,11 @@ export async function identity(request:Request){configured();const c=cookies(req
 export function scope(params:URLSearchParams){const local=params.get('local');if(!local||! /^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(local))throw new AccessError('Selecione uma cidade válida.',400);const fuel=params.get('tp_comb'),gtin=params.get('gtin'),term=params.get('termo')?.trim();if(fuel&&['1','2','3','4','5'].includes(fuel))return `${local}|fuel:${fuel}`;if(gtin&&/^(\d{8}|\d{12,14})$/.test(gtin))return `${local}|gtin:${gtin}`;if(term&&term.length<=120)return `${local}|term:${term}`;throw new AccessError('Consulta inválida.',400)}
 export async function requireSearch(request:Request){const account=await identity(request),grant=verify(request.headers.get('x-search-grant')||'');if(!grant||grant.account!==account.id||grant.scope!==scope(new URL(request.url).searchParams)||grant.exp<Date.now())throw new AccessError('Inicie uma nova consulta para acessar os preços.',403)}
 export function fail(error:unknown){const e=error instanceof AccessError?error:new AccessError('Não foi possível concluir a operação. Tente novamente.',500);return Response.json({error:e.message},{status:e.status,headers:{'Cache-Control':'no-store'}})}
-export function sameOrigin(request:Request){const origin=request.headers.get('origin');if(origin!==new URL(request.url).origin&&origin!==process.env.APP_URL)throw new AccessError('Origem inválida.',403)}
+export function sameOrigin(request:Request){
+ const normalize=(value:string|null|undefined)=>{try{const parsed=new URL(value||'');return ['http:','https:'].includes(parsed.protocol)?parsed.origin:null;}catch{return null;}};
+ const origin=normalize(request.headers.get('origin'));
+ // APP_URL is the public origin; request.url can be internal behind Render's proxy.
+ const allowed=normalize(process.env.APP_URL)||new URL(request.url).origin;
+ if(!origin||origin!==allowed)throw new AccessError('Origem inválida.',403);
+}
 export async function auth(path:string,body:object){configured();const r=await fetch(url()+'/auth/v1/'+path,{method:'POST',headers:{apikey:pub()!,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const data=await r.json();if(!r.ok)throw new AccessError('Não foi possível entrar ou cadastrar. Verifique os dados, a confirmação do e-mail ou tente mais tarde.',400);return data}

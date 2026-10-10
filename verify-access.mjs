@@ -14,3 +14,10 @@ await assert.rejects(()=>requireSearch(request(sign({account,scope:'6gf0ffq61|gt
 const {POST:credit}=await import('./app/api/credits/route.ts');globalThis.fetch=async()=>Response.json(-1);
 const denied=await credit(new Request('http://localhost/api/credits',{method:'POST',headers:{origin:'http://localhost',cookie:'pp_guest='+guest,'Content-Type':'application/json'},body:JSON.stringify({id:'11111111-1111-4111-8111-111111111111',params:{local:'6gf0ffq61',gtin:'7898024394938'}})}));assert.equal(denied.status,402);assert.equal((await denied.json()).code,'SIGNUP_REQUIRED');
 console.log('OK: assinatura, acesso sem crédito, consulta vinculada ao produto/cidade e expiração.');
+
+const {sameOrigin}=await import('./lib/credit-server.ts');
+process.env.APP_URL='https://menopreco-1.onrender.com/';
+sameOrigin(new Request('http://localhost:10000/api/account',{headers:{origin:'https://menopreco-1.onrender.com'}}));
+assert.throws(()=>sameOrigin(new Request('http://localhost:10000/api/account',{headers:{origin:'https://evil.example'}})));
+assert.throws(()=>sameOrigin(new Request('http://localhost:10000/api/account')));
+console.log('OK: origem pública com barra final e proxy interno; origens externas/ausentes rejeitadas.');

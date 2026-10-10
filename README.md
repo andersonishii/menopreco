@@ -51,3 +51,5 @@ Pagamento aprovado de R$ 5,00 em BRL para o vendedor da integração libera 10 c
 Verificações locais: `node verify-access.mjs` e `npm run build` em render-app. A integração real requer executar o SQL e configurar os serviços externos; isso não é feito pelo build.
 
 A coluna `credit_accounts.unlimited_access` permite consultas ilimitadas quando `true`, sem consumir saldo. Somente o administrador no Supabase ou o servidor pode alterá-la; não há opção pública para ativação. A conta continua exigindo login e e-mail confirmado.
+
+As buscas de categorias e produtos tentam primeiro a API pelo navegador, usando a conexão do usuário. Login e crédito são validados no servidor antes da consulta. Se ocorrer CORS, erro de rede ou resposta inválida, a consulta usa o Render com a mesma autorização, sem novo desconto. Nenhum cookie de login ou autorização é enviado ao Nota Paraná.

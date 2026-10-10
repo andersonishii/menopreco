@@ -23,3 +23,5 @@
 .barcode-reader{margin-top:16px}.barcode-camera{margin-top:16px;border:1px solid #dce4d7;border-radius:12px;padding:16px;background:#f8faf4}.camera-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.camera-heading h3{margin:0;min-height:0}.camera-preview{position:relative;background:#15251c;border-radius:10px;overflow:hidden;max-width:600px;margin:12px auto}.camera-preview video{display:block;width:100%;max-height:360px;object-fit:cover}.camera-frame{position:absolute;inset:25% 8%;border:3px solid #d0e49c;border-radius:8px;pointer-events:none}.barcode-camera p,.barcode-reader>p{font-size:13px;line-height:1.6}
 
 .camera-preview video{object-fit:contain;max-height:none}.barcode-camera label{display:block;margin:14px 0 6px}.barcode-camera select{width:100%;padding:10px;border:1px solid #dce4d7;border-radius:8px;background:white}
+
+.fuel-card.fuel-price-variation{border:2px solid #d5ae56;background:#fffdf7}.fuel-benefit-badge{display:inline-block;background:#fff0c8;color:#765512;border-radius:6px;padding:6px 8px;font-size:11px;line-height:1.5}

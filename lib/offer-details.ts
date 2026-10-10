@@ -27,3 +27,14 @@ export function differentDailyPrices<T extends DatedOffer>(offers:T[]){
  }
  return new Set([...buckets.values()].filter(b=>b.prices.size>1).flatMap(b=>b.ids));
 }
+// Fuel results already belong to the selected fuel type. Descriptions and dates can differ.
+export function fuelPriceVariations<T extends DatedOffer>(offers:T[]){
+ const buckets=new Map<string,T[]>();
+ for(const offer of offers){const store=offer.estabelecimento;
+  const identity=store?.cnpj||store?.id||(store?.nm_logr&&store.mun?[store.nm_emp,store.tp_logr,store.nm_logr,store.nr_logr,store.bairro,store.mun].join('|'):null);
+  if(!identity||!offer.id)continue;const group=buckets.get(identity)||[];group.push(offer);buckets.set(identity,group);
+ }
+ const variations=new Map<string,{min:number;max:number}>();
+ for(const group of buckets.values()){const stats=priceSummary(group);if(stats&&stats.min<stats.max)for(const offer of group)if(offer.id)variations.set(offer.id,{min:stats.min,max:stats.max});}
+ return variations;
+}

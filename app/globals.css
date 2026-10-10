@@ -15,3 +15,5 @@
 .plans{display:grid;grid-template-columns:1fr 1fr;gap:16px}.plans article{background:white;padding:18px;border:1px solid #dce4d7;border-radius:12px}@media(max-width:700px){.plans{grid-template-columns:1fr}}
 
 .auth-links{display:flex;flex-wrap:wrap;gap:12px 24px;margin-top:20px;padding-top:16px;border-top:1px solid #dce4d7}.auth-links .back{font-size:14px;color:#1f7049;padding:8px 0;min-height:40px;text-decoration:underline;text-underline-offset:4px}.unlimited-badge{display:inline-block;padding:5px 10px;border-radius:20px;background:#d8ecd9;color:#176d47;font-size:13px}.auth-links .back:hover{color:#145b39}@media(max-width:480px){.auth-links{flex-direction:column;align-items:flex-start;gap:4px}}
+
+.price-variation{display:block;background:#fff4dc;border:1px solid #e6cf91;border-radius:7px;padding:9px;margin:10px 0;color:#765512;font-size:12px;line-height:1.5}.offer-place,.store small{overflow-wrap:anywhere}

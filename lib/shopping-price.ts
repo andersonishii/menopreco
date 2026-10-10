@@ -1,5 +1,6 @@
+import type {Store} from './offer-details';
 export type PricePolicy='cheapest'|'today'|'recent';
-export type ShoppingOffer={gtin?:string;desc:string;valor?:string;valor_tabela?:string;datahora?:string;tempo:string;distkm:string;estabelecimento:{nm_emp:string;nm_fan:string;bairro:string;mun:string;tp_logr:string;nm_logr:string;nr_logr:string}};
+export type ShoppingOffer={id?:string;gtin?:string;desc:string;valor?:string;valor_tabela?:string;datahora?:string;tempo:string;distkm:string;estabelecimento:Store};
 const calendar=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'});
 export function saleDay(value:string|Date){
  const date=value instanceof Date?value:new Date(value);

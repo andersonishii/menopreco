@@ -24,3 +24,26 @@ A pasta `diagnostico` continua disponível separadamente. Para publicá-la, use 
 ## Versão Sites
 
 A implementação original na raiz continua preparada para Cloudflare/Sites. Seus comandos de build não devem ser usados no Render. A publicação existente no Sites permanece independente.
+
+## Ativar cadastro e créditos
+
+1. No Supabase, abra SQL Editor e execute o arquivo `supabase/credits.sql` completo. As tabelas ficam protegidas por RLS e são acessíveis somente ao servidor.
+2. No Render → Environment, configure:
+   - `NEXT_PUBLIC_SUPABASE_URL`: URL base do projeto.
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Publishable key.
+   - `SUPABASE_SECRET_KEY`: Secret key (ou service_role legada), somente no servidor.
+   - `MERCADO_PAGO_ACCESS_TOKEN`: token do vendedor de teste.
+   - `MERCADO_PAGO_TEST_MODE`: `true` durante os testes; `false` somente para cobrança real com credenciais de produção.
+   - `APP_URL`: `https://menopreco-1.onrender.com` (sem barra final).
+   - `MERCADO_PAGO_WEBHOOK_SECRET`: segredo de assinatura disponível ao configurar Webhooks no painel do Mercado Pago. Nunca publicar essas chaves no Git.
+3. Supabase → Authentication → URL Configuration: Site URL igual a `APP_URL`. Mantenha confirmação de e-mail ativada. Configure envio SMTP para uso público, conforme limites de envio do Supabase.
+4. Mercado Pago → Webhooks: URL `https://menopreco-1.onrender.com/api/payments/webhook`, evento Payments. Configure o segredo de assinatura no Render. A aplicação também envia notification_url ao criar o checkout.
+5. Faça deploy do último commit no Render e teste com comprador de teste distinto do vendedor.
+
+Visitante recebe 3 consultas no cookie assinado; uma conta confirmada recebe mais 3, apenas uma vez. Cada nova busca por descrição, código de barras ou combustível consome um crédito; cada código distinto na lista consome um crédito. Ordenação, seleção de categoria e paginação reutilizam a autorização por 30 minutos. Consultas iniciadas consomem crédito mesmo se não houver oferta ou o serviço externo falhar. Não existe renovação automática. O login expira após a duração da sessão do Supabase; entre novamente quando solicitado.
+
+A identificação do visitante depende do cookie do navegador: apagar cookies permite uma nova identidade. Créditos de conta ficam no servidor e não são alteráveis pelo navegador. O projeto não promete identificação permanente de dispositivo.
+
+Pagamento aprovado de R$ 5,00 em BRL para o vendedor da integração libera 10 consultas no pedido registrado; notificações repetidas não duplicam créditos. O redirecionamento do checkout nunca libera créditos sozinho. Confira o saldo em Minha conta após a notificação. Use a frase “Oferta de lançamento: R$ 5,00”, sem referência a preço anterior não comprovado.
+
+Verificações locais: `node verify-access.mjs` e `npm run build` em render-app. A integração real requer executar o SQL e configurar os serviços externos; isso não é feito pelo build.

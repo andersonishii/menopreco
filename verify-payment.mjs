@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
+process.env.NEXT_PUBLIC_SUPABASE_URL='https://example.supabase.co';process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='test';process.env.SUPABASE_SECRET_KEY='sb_secret_test';process.env.MERCADO_PAGO_ACCESS_TOKEN='TEST-token';process.env.MERCADO_PAGO_TEST_MODE='true';
+const {POST}=await import('./app/api/payments/webhook/route.ts');let status='pending',amount=5,currency='BRL',balance=3,credited=false,calls=0;
+globalThis.fetch=async url=>{url=String(url);if(url.includes('/v1/payments/'))return Response.json({id:123,status,transaction_amount:amount,currency_id:currency,live_mode:false,collector_id:10,external_reference:'11111111-1111-4111-8111-111111111111'});if(url.includes('/users/me'))return Response.json({id:10});calls++;if(!credited){balance+=10;credited=true;}return Response.json(true)};
+const event=()=>new Request('https://example.com/api/payments/webhook?data.id=123',{method:'POST',body:JSON.stringify({type:'payment',data:{id:123}})});
+assert.equal((await POST(event())).status,200);assert.equal(calls,0);
+status='approved';amount=4;assert.equal((await POST(event())).status,400);assert.equal(calls,0);
+amount=5;currency='USD';assert.equal((await POST(event())).status,400);currency='BRL';
+assert.equal((await POST(event())).status,200);assert.equal(balance,13);assert.equal((await POST(event())).status,200);assert.equal(balance,13);
+console.log('OK: notificação pendente não credita, valor/moeda divergentes são rejeitados; chamada usa regra de crédito idempotente do banco.');

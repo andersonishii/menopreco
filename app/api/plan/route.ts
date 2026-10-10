@@ -1,0 +1,2 @@
+import {identity,db,sameOrigin,fail,AccessError} from '../../../lib/credit-server';
+export async function POST(request:Request){try{sameOrigin(request);const account=await identity(request);if(!account.userId)throw new AccessError('Entre na sua conta.',401);const result=await db('rpc/choose_free_plan',{method:'POST',body:JSON.stringify({p_account:account.id})});if(result<0)throw new AccessError('As 2 consultas gratuitas já foram concedidas a esta conta. Escolha o pacote de 10 consultas.',409);return Response.json({remaining:result});}catch(e){return fail(e)}}

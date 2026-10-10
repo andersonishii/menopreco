@@ -27,7 +27,7 @@ A implementação original na raiz continua preparada para Cloudflare/Sites. Seu
 
 ## Ativar cadastro e créditos
 
-1. No Supabase, abra SQL Editor e execute o arquivo `supabase/credits.sql` completo. As tabelas ficam protegidas por RLS e são acessíveis somente ao servidor.
+1. No Supabase, abra SQL Editor e execute `supabase/credits.sql` e depois `supabase/required-login.sql`. As tabelas ficam protegidas por RLS e são acessíveis somente ao servidor.
 2. No Render → Environment, configure:
    - `NEXT_PUBLIC_SUPABASE_URL`: URL base do projeto.
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Publishable key.
@@ -40,9 +40,11 @@ A implementação original na raiz continua preparada para Cloudflare/Sites. Seu
 4. Mercado Pago → Webhooks: URL `https://menopreco-1.onrender.com/api/payments/webhook`, evento Payments. Configure o segredo de assinatura no Render. A aplicação também envia notification_url ao criar o checkout.
 5. Faça deploy do último commit no Render e teste com comprador de teste distinto do vendedor.
 
-Visitante recebe 3 consultas no cookie assinado; uma conta confirmada recebe mais 3, apenas uma vez. Cada nova busca por descrição, código de barras ou combustível consome um crédito; cada código distinto na lista consome um crédito. Ordenação, seleção de categoria e paginação reutilizam a autorização por 30 minutos. Consultas iniciadas consomem crédito mesmo se não houver oferta ou o serviço externo falhar. Não existe renovação automática. O login expira após a duração da sessão do Supabase; entre novamente quando solicitado.
+Cadastro e login são obrigatórios. Após confirmar o e-mail, a conta escolhe entre 2 consultas gratuitas (uma única vez) ou R$ 5,00 por 10 consultas. Sem saldo, novas consultas são bloqueadas e a tela apresenta os planos. O gratuito não se renova. Saldos comprados existentes são preservados pela migração.
 
-A identificação do visitante depende do cookie do navegador: apagar cookies permite uma nova identidade. Créditos de conta ficam no servidor e não são alteráveis pelo navegador. O projeto não promete identificação permanente de dispositivo.
+Cada nova busca por descrição, código de barras ou combustível consome um crédito; cada código distinto na lista consome um crédito. Ordenação, seleção de categoria e paginação reutilizam a autorização por 30 minutos. Consultas iniciadas consomem crédito mesmo se não houver oferta ou o serviço externo falhar. Resultados da última consulta continuam visíveis após o saldo acabar.
+
+“Esqueci minha senha” envia um link pelo Supabase. Em Authentication → URL Configuration, inclua `https://menopreco-1.onrender.com/?recovery=true` nas Redirect URLs permitidas. O link abre a tela de nova senha; depois o usuário entra novamente. O envio depende do SMTP e dos limites do Supabase.
 
 Pagamento aprovado de R$ 5,00 em BRL para o vendedor da integração libera 10 consultas no pedido registrado; notificações repetidas não duplicam créditos. O redirecionamento do checkout nunca libera créditos sozinho. Confira o saldo em Minha conta após a notificação. Use a frase “Oferta de lançamento: R$ 5,00”, sem referência a preço anterior não comprovado.
 

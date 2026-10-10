@@ -5,14 +5,15 @@ process.env.NEXT_PUBLIC_SUPABASE_URL='https://example.supabase.co';process.env.N
 const {scope,sign,verify,requireSearch}=await import('./lib/credit-server.ts');
 assert.equal(scope(new URLSearchParams({local:'6gf0ffq61',gtin:'7898024394938'})),'6gf0ffq61|gtin:7898024394938');
 assert.equal(verify(sign({id:'test'})).id,'test');assert.equal(verify(sign({id:'test'})+'x'),null);
-const guest=sign({id:'guest:11111111-1111-4111-8111-111111111111'}),account='guest:11111111-1111-4111-8111-111111111111';
-const request=(grant)=>new Request('http://localhost/api/produtos?local=6gf0ffq61&gtin=7898024394938',{headers:{cookie:'pp_guest='+guest,'x-search-grant':grant}});
+const guest=sign({id:'guest:11111111-1111-4111-8111-111111111111'}),account='user:test';
+const request=(grant)=>new Request('http://localhost/api/produtos?local=6gf0ffq61&gtin=7898024394938',{headers:{cookie:'pp_auth=test','x-search-grant':grant}});
 await assert.rejects(()=>requireSearch(request('')));
+globalThis.fetch=async()=>Response.json({id:'test',email:'test@example.com',email_confirmed_at:'2026-01-01'});
 await requireSearch(request(sign({account,scope:'6gf0ffq61|gtin:7898024394938',exp:Date.now()+1000})));
 await assert.rejects(()=>requireSearch(request(sign({account,scope:'6gf0ffq61|gtin:7909883577186',exp:Date.now()+1000}))));
 await assert.rejects(()=>requireSearch(request(sign({account,scope:'6gf0ffq61|gtin:7898024394938',exp:0}))));
-const {POST:credit}=await import('./app/api/credits/route.ts');globalThis.fetch=async()=>Response.json(-1);
-const denied=await credit(new Request('http://localhost/api/credits',{method:'POST',headers:{origin:'http://localhost',cookie:'pp_guest='+guest,'Content-Type':'application/json'},body:JSON.stringify({id:'11111111-1111-4111-8111-111111111111',params:{local:'6gf0ffq61',gtin:'7898024394938'}})}));assert.equal(denied.status,402);assert.equal((await denied.json()).code,'SIGNUP_REQUIRED');
+const {POST:credit}=await import('./app/api/credits/route.ts');globalThis.fetch=async url=>String(url).includes('/auth/v1/user')?Response.json({id:'test',email:'test@example.com',email_confirmed_at:'2026-01-01'}):Response.json(-1);
+const denied=await credit(new Request('http://localhost/api/credits',{method:'POST',headers:{origin:'http://localhost',cookie:'pp_guest='+guest,'Content-Type':'application/json'},body:JSON.stringify({id:'11111111-1111-4111-8111-111111111111',params:{local:'6gf0ffq61',gtin:'7898024394938'}})}));assert.equal(denied.status,401);
 console.log('OK: assinatura, acesso sem crédito, consulta vinculada ao produto/cidade e expiração.');
 
 const {sameOrigin}=await import('./lib/credit-server.ts');

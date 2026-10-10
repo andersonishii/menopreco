@@ -1,8 +1,9 @@
+let testFetch;Object.defineProperty(globalThis,'fetch',{configurable:true,get(){return testFetch},set(fn){testFetch=async (...args)=>String(args[0]?.url||args[0]).includes('/auth/v1/user')?Response.json({id:'test',email:'test@example.com',email_confirmed_at:'2026-01-01'}):fn(...args)}});
 import {registerHooks} from 'node:module';
 registerHooks({resolve(specifier,context,next){if(specifier.startsWith('.')&&!/\.[a-z]+$/i.test(specifier))return next(specifier+'.ts',context);return next(specifier,context)}});
 process.env.NEXT_PUBLIC_SUPABASE_URL='https://example.supabase.co';process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='test';process.env.SUPABASE_SECRET_KEY='sb_secret_test';
 const {sign,scope}=await import('./lib/credit-server.ts');
-function authorized(url){const id='guest:11111111-1111-4111-8111-111111111111';let key;try{key=scope(new URL(url).searchParams)}catch{}return new Request(url,{headers:{cookie:'pp_guest='+sign({id}),'x-search-grant':sign({account:id,scope:key,exp:Date.now()+10000})}})}
+function authorized(url){const id='user:test';let key;try{key=scope(new URL(url).searchParams)}catch{}return new Request(url,{headers:{cookie:'pp_auth=test','x-search-grant':sign({account:id,scope:key,exp:Date.now()+10000})}})}
 import assert from 'node:assert/strict';
 const {GET}=await import('./app/api/produtos/route.ts');
 let called;globalThis.fetch=async request=>{called=new URL(request.url);return Response.json({produtos:[]})};

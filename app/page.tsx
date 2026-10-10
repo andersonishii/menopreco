@@ -42,7 +42,7 @@ export default function Page(){
  if(sort==='offers-asc')grouped.sort((a,b)=>a.offers.length-b.offers.length);
  if(sort==='offers-desc')grouped.sort((a,b)=>b.offers.length-a.offers.length);
  const money=(value:string)=>value.trim()!==''&&Number.isFinite(Number(value))?Number(value).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'Preço indisponível';
- const options=[{value:'recent-day',label:'Menor preço do dia mais recente disponível'},{value:'0',label:'Menor preço'},{value:'3',label:'Maior preço'},{value:'2',label:'Vendas mais recentes'},{value:'1',label:'Menor distância'}];
+ const options=[{value:'recent-day',label:'Menor preço do dia ou o mais recente possível'},{value:'0',label:'Menor preço'},{value:'3',label:'Maior preço'},{value:'2',label:'Vendas mais recentes'},{value:'1',label:'Menor distância'}];
  const resultOptions=[...options,{value:'offers-asc',label:'Menos ofertas (crescente)'},{value:'offers-desc',label:'Mais ofertas (decrescente)'}];
  function changeOrder(value:string){setSort(value);}
  function changeMode(value:'description'|'barcode'|'shopping'|'fuel'){setDirectOffers(false);setMode(value);setInput('');setTerm('');setProducts([]);setCategories([]);setCategory(null);setError('');setStep(1);setMore(false);setOffset(0);setSort(value==='description'?'recent-day':'0');}

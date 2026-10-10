@@ -3,7 +3,7 @@ import {fullAddress,differentDailyPrices} from '../lib/offer-details';
 import {useEffect,useState} from 'react';
 import {creditFetch} from '../lib/credit-client';
 import {chooseShoppingOffer,type PricePolicy,type ShoppingOffer as Offer} from '../lib/shopping-price';
-const policyLabels={cheapest:'Sempre o menor preço',today:'Menor preço — notas emitidas hoje',recent:'Menor preço do dia mais recente disponível'};
+const policyLabels={cheapest:'Sempre o menor preço',today:'Menor preço — notas emitidas hoje',recent:'Menor preço do dia ou o mais recente possível'};
 
 type Item={code:string;quantity:number;status:'pending'|'found'|'empty'|'error';offer?:Offer;price?:number;priceVariation?:boolean;error?:string};
 const money=(cents:number)=>(cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});

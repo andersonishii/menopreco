@@ -1,0 +1,7 @@
+import assert from 'node:assert/strict';import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
+Object.assign(process.env,{APP_URL:'https://site.example',NEXT_PUBLIC_SUPABASE_URL:'https://test.supabase.co',NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'mock',SUPABASE_SECRET_KEY:'sb_secret_mock',SERPER_API_KEY:'mock-key'});
+const {POST}=await import('./app/api/online-prices/route.ts');let calls=0;
+globalThis.fetch=async(url,init)=>{if(String(url).endsWith('/auth/v1/user'))return Response.json({id:'u',email_confirmed_at:'now'});assert.equal(String(url),'https://google.serper.dev/shopping');assert.equal(init.method,'POST');assert.equal(init.headers['X-API-KEY'],'mock-key');assert.equal(JSON.parse(init.body).gl,'br');calls++;return Response.json({shopping:[{title:'Kinder Joy 40g',price:'R$ 14,99',source:'Loja A'},{title:'Kinder Joy 40g',price:'R$ 19,99',source:'Loja B'},{title:'Kinder Joy 20g',price:'R$ 9,00'}]});};
+const request=()=>new Request('https://site.example/api/online-prices',{method:'POST',headers:{origin:'https://site.example',cookie:'pp_auth=mock'},body:JSON.stringify({name:'KINDER JOY 40G',code:'7898024394938'})});
+const response=await POST(request());assert.equal(response.status,200);const data=await response.json();assert.equal(data.min,14.99);assert.equal(data.max,19.99);assert.equal(data.count,2);assert.equal((await POST(request())).status,200);assert.equal(calls,1);console.log('OK: Serper recebe POST autenticado e retorna faixa BRL filtrada com cache.');

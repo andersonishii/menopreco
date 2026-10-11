@@ -44,3 +44,5 @@ html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-size:16px;line-hei
 .store-address.store-map-link{display:inline-flex;cursor:pointer;min-height:44px;color:#176d47;position:relative}.store-address .map-action{font-size:14px;font-weight:600}
 
 .pix-checkout input[aria-invalid="true"]{border:2px solid #b42318;background:#fff5f4;outline-color:#b42318}.cpf-error{color:#b42318!important;font-weight:600}.pix-status-actions{padding:14px;background:#f0f5ec;border-radius:12px}.pix-status-message{color:#243f30!important;font-weight:600}@media(max-width:700px){.pix-status-actions{position:sticky;bottom:12px;z-index:5;border:1px solid #d0dfcb;box-shadow:0 4px 18px #203d2920}.pix-status-actions .primary{width:100%;margin:0}.pix-status-actions p{margin-bottom:0}}
+
+.account-panel .account-success{padding:16px;border:1px solid #77a986;border-radius:10px;background:#e9f6ed;color:#14532d;font-size:16px;font-weight:600}

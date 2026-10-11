@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
-import {groupOffers} from './lib/product-groups.ts';
+import {groupOffers,distancePriceOrder} from './lib/product-groups.ts';
 const offer=(id,gtin,price)=>({id,gtin,valor_tabela:price,desc:'Arroz',tempo:'há uma hora',distkm:'1',estabelecimento:{nm_emp:'Mercado',bairro:'Batel',mun:'Curitiba'}});
 const groups=groupOffers([offer('a','7896290300295','9.99'),offer('b','07896290300295','5.45'),offer('c','7896038321056','7'),offer('d','','4'),offer('e','0','3'),offer('f','','2')]);
 assert.equal(groups.length,5);assert.deepEqual(groups[0].offers.map(o=>o.id),['b','a']);assert.equal(groups[0].gtin,'07896290300295');assert.equal(groups[2].offers.length,1);assert.equal(groups[3].gtin,null);assert.equal(groupOffers([]).length,0);
 console.log('PASS: agrupamento GTIN, zeros à esquerda, preços crescentes e produtos sem GTIN separados.');
+
+const nearby={...offer('near','7896290300295','20'),distkm:'0.5'};
+const farCheap={...offer('far','7896290300295','5'),distkm:'2'};
+const nearbyCheap={...offer('nearCheap','7896290300295','10'),distkm:'0.504'};
+const missing={...offer('missing','7896290300295','1'),distkm:''};
+assert.deepEqual([farCheap,nearby,missing,nearbyCheap].sort(distancePriceOrder).map(o=>o.id),['nearCheap','near','far','missing']);
+const closest=groupOffers([farCheap,nearby]).map(g=>({...g,offers:[...g.offers].sort(distancePriceOrder)}));
+assert.equal(closest[0].offers[0].id,'near');
+assert.equal(distancePriceOrder(missing,{...missing}),0);
+console.log('PASS: menor distância, empate na precisão exibida, distância ausente e oferta destacada.');

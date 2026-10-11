@@ -2,7 +2,7 @@ import {requireSearch,fail} from '../../../lib/credit-server';
 export async function GET(request:Request){
  const local=new URL(request.url).searchParams.get('local');
  const raio=new URL(request.url).searchParams.get('raio')||(new URL(request.url).searchParams.has('tp_comb')?'7':'22');
- if(!/^\d+$/.test(raio)||Number(raio)<1||Number(raio)>22)return Response.json({error:'Informe um raio entre 1 e 22 km.'},{status:400});
+ if(!/^\d+$/.test(raio)||Number(raio)<1||Number(raio)>30)return Response.json({error:'Informe um raio entre 1 e 30 km.'},{status:400});
  if(!local||! /^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(local))return Response.json({error:'Selecione uma cidade válida.'},{status:400});
  const query=new URL(request.url).searchParams,termo=query.get('termo')?.trim(),gtin=query.get('gtin')?.trim();
  const fuel=query.get('tp_comb');

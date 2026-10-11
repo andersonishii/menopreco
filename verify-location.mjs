@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 const page=fs.readFileSync('app/page.tsx','utf8');
 const encode=page.slice(page.indexOf('function locationGeohash'),page.indexOf('type Product=Offer;')).replace('latitude:number,longitude:number','latitude,longitude');
 const action=page.slice(page.indexOf(' function useMyLocation(){'),page.indexOf(' const [directOffers'));
-let success,failure,selected,message,error,cityBusy=false;
-const run=new Function('navigator','fetch','selectCity','setCityBusy','setLocating','setCityError','setLocationMessage','busy','cityBusy',encode+action+';useMyLocation();');
-const setters=[value=>{selected=value;},value=>{cityBusy=value;},()=>{},value=>{error=value;},value=>{message=value;}];
+let success,failure,selected,message,error,cityBusy=false,manualRequests=0;
+const run=new Function('navigator','fetch','selectCity','setCityBusy','setLocating','setCityError','setLocationMessage','busy','cityBusy',encode+'function requestManualCity(){setLocating(\"manual\");}'+action+';useMyLocation();');
+const setters=[value=>{selected=value;},value=>{cityBusy=value;},value=>{if(value==='manual')manualRequests++;},value=>{error=value;},value=>{message=value;}];
 const navigator={geolocation:{getCurrentPosition:(ok,no)=>{success=ok;failure=no;}}};
 run(navigator,async()=>({ok:true,json:async()=>({city:'Ponta Grossa',principalSubdivisionCode:'BR-PR'})}),...setters,false,false);
 assert.match(message,/Aguardando/);
@@ -16,3 +16,5 @@ await success({coords:{latitude:-25.0891685,longitude:-50.1601812,accuracy:10}})
 assert.equal(selected.geohash,'6gs368dmp');assert.match(message,/Não foi possível identificar/);
 run(navigator,async()=>{},...setters,false,false);failure({code:1});assert.match(error,/não autorizou/);assert.equal(cityBusy,false);
 console.log('Localização: cidade identificada, geohash preservado, falha de serviço e permissão negada conferidos.');
+
+assert.equal(manualRequests,1);

@@ -1,5 +1,6 @@
+import {distancePriceOrder} from './product-groups';
 import type {Store} from './offer-details';
-export type PricePolicy='cheapest'|'today'|'recent';
+export type PricePolicy='cheapest'|'today'|'recent'|'distance';
 export type ShoppingOffer={id?:string;gtin?:string;desc:string;valor?:string;valor_tabela?:string;datahora?:string;tempo:string;distkm:string;estabelecimento:Store};
 const calendar=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'});
 export function saleDay(value:string|Date){
@@ -11,11 +12,12 @@ export function saleDay(value:string|Date){
 export function chooseShoppingOffer(offers:ShoppingOffer[],code:string,policy:PricePolicy,now=new Date()){
  const today=saleDay(now)!;
  let candidates=offers.filter(p=>String(p.gtin??'').padStart(14,'0')===code.padStart(14,'0')).map(offer=>({offer,value:Number(offer.valor??offer.valor_tabela),day:offer.datahora?saleDay(offer.datahora):null})).filter(p=>Number.isFinite(p.value)&&p.value>0);
- if(policy!=='cheapest'){
+ if(policy==='today'||policy==='recent'){
   candidates=candidates.filter(p=>p.day!==null&&p.day<=today);
   const target=policy==='today'?today:candidates.reduce((latest,p)=>p.day!>latest?p.day!:latest,'');
   candidates=candidates.filter(p=>p.day===target);
  }
- candidates.sort((a,b)=>a.value-b.value||(Date.parse(b.offer.datahora||'')||0)-(Date.parse(a.offer.datahora||'')||0));
+ if(policy==='distance')candidates=candidates.filter(p=>String(p.offer.distkm??'').trim()!==''&&Number.isFinite(Number(p.offer.distkm))&&Number(p.offer.distkm)>=0);
+ candidates.sort((a,b)=>(policy==='distance'?distancePriceOrder({...a.offer,id:a.offer.id||'',valor_tabela:String(a.value)},{...b.offer,id:b.offer.id||'',valor_tabela:String(b.value)}):a.value-b.value)||(Date.parse(b.offer.datahora||'')||0)-(Date.parse(a.offer.datahora||'')||0));
  return candidates[0];
 }

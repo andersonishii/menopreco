@@ -27,3 +27,5 @@
 .fuel-card.fuel-price-variation{border:2px solid #d5ae56;background:#fffdf7}.fuel-benefit-badge{display:inline-block;background:#fff0c8;color:#765512;border-radius:6px;padding:6px 8px;font-size:11px;line-height:1.5}
 
 .product-group.product-price-variation,.shopping-item.product-price-variation{border:2px solid #d5ae56;background:#fffdf7}
+
+.pix-checkout{margin-top:20px;padding:24px;border:1px solid #d8e2d1;border-radius:16px;background:#fff}.pix-checkout p{margin:12px 0}.pix-checkout label{display:block;margin:12px 0 8px}.pix-checkout input,.pix-checkout textarea{width:100%;padding:12px;border:1px solid #d8e2d1;border-radius:8px}.pix-qr{display:block;width:240px;max-width:100%;height:auto;margin:16px auto}.pix-checkout button{margin:8px 12px 8px 0}

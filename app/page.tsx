@@ -26,7 +26,7 @@ export default function Page(){
  const [access,setAccess]=useState(false);
  const [locationMessage,setLocationMessage]=useState(''),[locating,setLocating]=useState(false);
  const [city,setCity]=useState<{name:string;geohash:string;device?:boolean}>({name:'Curitiba',geohash:'6gkzq99z5j5f'}),[cityInput,setCityInput]=useState('Curitiba'),[cityBusy,setCityBusy]=useState(false),[cityError,setCityError]=useState(''),[cityOptions,setCityOptions]=useState<{name:string;geohash:string}[]>([]);
- useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem('preco-perto-city')||'null');if(typeof saved?.name==='string'&&saved.name.length<=120&&typeof saved.geohash==='string'&&/^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(saved.geohash)){setCity(saved);setCityInput(saved.name);}}catch{}},[]);
+ useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem('preco-perto-city')||'null');if(typeof saved?.name==='string'&&saved.name.length<=120&&typeof saved.geohash==='string'&&/^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(saved.geohash)){setCity(saved);setCityInput(saved.name);if(saved.device){setNeedsManualCity(true);setCity(current=>({...current,device:false}));setCityInput('');setCityError('Confirme sua localização novamente ou selecione uma cidade do Paraná para continuar.');}}}catch{}},[]);
  function selectCity(value:{name:string;geohash:string;device?:boolean}){setNeedsManualCity(false);setLocationMessage('');setCity(value);try{localStorage.setItem('preco-perto-city',JSON.stringify(value));}catch{}setCityInput(value.name);setCityOptions([]);setCityError('');changeMode(mode);}
  async function searchCity(event:React.FormEvent){event.preventDefault();if(busy||cityBusy||city.device)return;const typed=cityInput.trim();const normalized=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();const matched=paranaCities.find(name=>normalized(name)===normalized(typed));if(!matched){setCityError('Escolha uma cidade do Paraná nas sugestões.');setNeedsManualCity(true);document.getElementById('city')?.focus();return;}setCityBusy(true);setCityError('');setCityOptions([]);try{const response=await fetch('/api/cidades?regiao='+encodeURIComponent(matched),{signal:AbortSignal.timeout(25000)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Não foi possível buscar a cidade.');if(!data.cidades.length){setCityError('Cidade não encontrada no Paraná. Confira o nome e tente novamente.');return;}if(data.cidades.length===1)selectCity(data.cidades[0]);else setCityOptions(data.cidades);}catch(e){setCityError((e as Error).message);}finally{setCityBusy(false);}}
  function requestManualCity(){setCity(current=>({...current,device:false}));setNeedsManualCity(true);setLocationMessage('');setCityInput('');setCityError('Informe e selecione uma cidade do Paraná para pesquisar.');clearGrants();changeMode(mode);setTimeout(()=>document.getElementById('city')?.focus(),0);}
@@ -41,13 +41,17 @@ export default function Page(){
    if(!active)return;clearTimeout(timer);
    const {latitude,longitude,accuracy}=position.coords;
    const geohash=locationGeohash(latitude,longitude);
-   selectCity({name:'Minha localização',geohash,device:true});
-   setLocationMessage('Localização obtida! Identificando sua cidade…');
+   setNeedsManualCity(true);
+   setLocationMessage('Localização obtida! Verificando se você está no Paraná…');
    let label='';
    try{
     const response=await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?'+new URLSearchParams({latitude:String(latitude),longitude:String(longitude),localityLanguage:'pt'}),{signal:AbortSignal.timeout(8000)});
-    if(response.ok){const data=await response.json();const name=data.city||data.locality;const region=data.principalSubdivisionCode?.split('-').pop();if(typeof name==='string'&&name){label=name+(region?' / '+region:'');selectCity({name:label.slice(0,120),geohash,device:true});}}
+    if(response.ok){const data=await response.json();const name=data.city||data.locality;const region=data.principalSubdivisionCode;
+     if(region!=='BR-PR'){finish();requestManualCity();setCityError(region?'Sua localização está fora do Paraná. As pesquisas estão disponíveis apenas neste estado. Informe uma cidade do Paraná para continuar.':'Não foi possível confirmar que sua localização está no Paraná. Informe uma cidade do Paraná para continuar.');return;}
+     label=typeof name==='string'&&name?name+' / PR':'Minha localização';selectCity({name:label.slice(0,120),geohash,device:true});
+    }
    }catch{}
+   if(!label){finish();requestManualCity();setCityError('Não foi possível verificar o estado da sua localização. Informe uma cidade do Paraná para continuar.');return;}
    setLocationMessage((label?'Localização identificada: '+label+'.':'Localização obtida. Não foi possível identificar o nome da cidade, mas sua posição será usada nas buscas.')+' Precisão aproximada: '+Math.round(accuracy).toLocaleString('pt-BR')+' m.');
    finish();
   },error=>{if(!active)return;finish();requestManualCity();setLocationMessage('');setCityError(error.code===1?'Você não autorizou a localização. Permita o acesso no navegador ou escolha uma cidade.':error.code===3?'A localização demorou para responder. Tente novamente ou escolha uma cidade.':'Não foi possível obter sua localização. Tente novamente ou escolha uma cidade.');},{enableHighAccuracy:true,timeout:20000,maximumAge:0});

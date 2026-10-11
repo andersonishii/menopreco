@@ -40,3 +40,5 @@ html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-size:16px;line-hei
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
 .store-address{display:inline-flex;flex-direction:column;gap:6px;line-height:1.6;overflow-wrap:anywhere}.store-address>.store-map-link{display:inline-flex;align-items:center;gap:8px;min-height:40px;color:#176d47;font-size:14px;font-weight:600;text-decoration:underline}.offer-place .store-address{display:flex}
+
+.store-address.store-map-link{display:inline-flex;cursor:pointer;min-height:44px;color:#176d47;position:relative}.store-address .map-action{font-size:14px;font-weight:600}

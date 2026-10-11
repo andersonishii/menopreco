@@ -48,3 +48,5 @@ html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-size:16px;line-hei
 .account-panel .account-success{padding:16px;border:1px solid #77a986;border-radius:10px;background:#e9f6ed;color:#14532d;font-size:16px;font-weight:600}
 
 .google-prices-link{display:inline-flex;align-items:center;min-height:44px;padding:10px 14px;margin-top:14px;border:1px solid #bed2bf;border-radius:9px;background:#f3f8ef;color:#176d47;font-size:15px;font-weight:600}.google-prices-link:hover{background:#e6f1df;text-decoration:underline}
+
+.online-comparison{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin:12px 0}.online-result{display:flex;flex-direction:column;gap:7px;padding:14px;border:1px solid #c9dcbd;border-radius:10px;background:#eef7e7;font-size:14px}.online-result strong{font-size:18px;color:#176d47}.online-error{color:#b42318;font-size:14px}.online-google-link{color:#176d47;text-decoration:underline;font-size:14px;min-height:40px;display:flex;align-items:center}

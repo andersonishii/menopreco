@@ -14,3 +14,20 @@ export function distancePriceOrder(a:Offer,b:Offer){
  if(da!==db)return da<db?-1:1;
  const pa=price(a),pb=price(b);return pa===pb?0:pa<pb?-1:1;
 }
+
+export function distanceToleranceOrder<T extends {distkm:string;valor_tabela?:string;valor?:string}>(offers:T[],tolerance=0):T[]{
+ const distance=(offer:T)=>{const raw=String(offer.distkm??'').trim(),value=Number(raw);return raw!==''&&Number.isFinite(value)&&value>=0?value:Infinity;};
+ const price=(offer:T)=>{const raw=String(offer.valor_tabela??offer.valor??'').trim(),value=Number(raw);return raw!==''&&Number.isFinite(value)&&value>0?value:Infinity;};
+ const closest=Math.min(...offers.map(distance));
+ const limit=closest+(Number.isFinite(tolerance)?Math.max(0,tolerance):0);
+ return [...offers].sort((a,b)=>{
+  const da=distance(a),db=distance(b);
+  if(tolerance>0&&Number.isFinite(closest)){
+   const nearA=da<=limit+1e-9,nearB=db<=limit+1e-9;
+   if(nearA!==nearB)return nearA?-1:1;
+   if(nearA)return (price(a)-price(b))||(da-db);
+  }
+  const roundedA=Math.round(da*100),roundedB=Math.round(db*100);
+  return roundedA===roundedB?(price(a)-price(b))||0:roundedA<roundedB?-1:1;
+ });
+}

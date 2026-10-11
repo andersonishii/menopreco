@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {stripTypeScriptTypes} from 'node:module';
-import {distancePriceOrder} from './lib/product-groups.ts';
+import {distancePriceOrder,distanceToleranceOrder} from './lib/product-groups.ts';
 const source=stripTypeScriptTypes(fs.readFileSync('lib/shopping-price.ts','utf8')).replace(/^import .*;$/gm,'').replace(/export /g,'');
-const choose=new Function('distancePriceOrder',source+';return chooseShoppingOffer;')(distancePriceOrder);
+const choose=new Function('distancePriceOrder','distanceToleranceOrder',source+';return chooseShoppingOffer;')(distancePriceOrder,distanceToleranceOrder);
 const code='7898024394938',now=new Date('2026-10-11T15:00:00Z');
 const offer=(id,price,distance,date='2026-10-11T12:00:00Z')=>({id,gtin:code,desc:'Produto',valor_tabela:String(price),distkm:distance,datahora:date,tempo:'hoje',estabelecimento:{}});
 const offers=[offer('farCheap',5,'3'),offer('near',20,'0.5'),offer('nearCheap',10,'0.504'),offer('missing',1,'')];
@@ -15,3 +15,9 @@ assert.equal(choose([offer('oldCheap',1,'1','2026-10-10T12:00:00Z'),offers[0]],c
 assert.equal(choose([offer('old',1,'1','2026-10-10T12:00:00Z')],code,'today',now),undefined);
 assert.equal(choose(offers,'12345678','distance',now),undefined);
 console.log('PASS: lista por distância, desempate por preço, datas, GTIN e critérios anteriores.');
+
+const tolerant=[offer('closest',20,'2'),offer('bestNearby',10,'2.8'),offer('outside',1,'3.1')];
+assert.equal(choose(tolerant,code,'distance',now,1).offer.id,'bestNearby');
+assert.equal(choose(tolerant,code,'distance',now,0).offer.id,'closest');
+assert.deepEqual(distanceToleranceOrder(tolerant,1).map(o=>o.id),['bestNearby','closest','outside']);
+console.log('PASS: tolerância adicional, preço na faixa, exclusão de oferta além da faixa e zero sem tolerância.');

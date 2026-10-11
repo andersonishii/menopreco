@@ -1,7 +1,7 @@
 "use client";
 import StoreAddress from '../components/store-address';
 import {recentPriceOrder,productPriceVariations,priceBenefitsWarning,priceSummary} from '../lib/offer-details';
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
 import BarcodeCamera from '../components/barcode-camera';
 import AccountPanel from '../components/account-panel';
 import {creditFetch,clearGrants} from '../lib/credit-client';
@@ -13,7 +13,8 @@ type Product=Offer;
 export default function Page(){
  const [access,setAccess]=useState(false);
  const [city,setCity]=useState({name:'Curitiba',geohash:'6gkzq99z5j5f'}),[cityInput,setCityInput]=useState('Curitiba'),[cityBusy,setCityBusy]=useState(false),[cityError,setCityError]=useState(''),[cityOptions,setCityOptions]=useState<{name:string;geohash:string}[]>([]);
- function selectCity(value:{name:string;geohash:string}){setCity(value);setCityInput(value.name);setCityOptions([]);setCityError('');changeMode(mode);}
+ useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem('preco-perto-city')||'null');if(typeof saved?.name==='string'&&saved.name.length<=120&&typeof saved.geohash==='string'&&/^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(saved.geohash)){setCity(saved);setCityInput(saved.name);}}catch{}},[]);
+ function selectCity(value:{name:string;geohash:string}){setCity(value);try{localStorage.setItem('preco-perto-city',JSON.stringify(value));}catch{}setCityInput(value.name);setCityOptions([]);setCityError('');changeMode(mode);}
  async function searchCity(event:React.FormEvent){event.preventDefault();if(busy||cityBusy)return;setCityBusy(true);setCityError('');setCityOptions([]);try{const response=await fetch('/api/cidades?regiao='+encodeURIComponent(cityInput.trim()),{signal:AbortSignal.timeout(25000)});const data=await response.json();if(!response.ok)throw new Error(data.error||'Não foi possível buscar a cidade.');if(!data.cidades.length){setCityError('Cidade não encontrada no Paraná. Confira o nome e tente novamente.');return;}if(data.cidades.length===1)selectCity(data.cidades[0]);else setCityOptions(data.cidades);}catch(e){setCityError((e as Error).message);}finally{setCityBusy(false);}}
  const [directOffers,setDirectOffers]=useState(false);
  const [offerOrders,setOfferOrders]=useState<Record<string,string>>({});

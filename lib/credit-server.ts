@@ -25,13 +25,14 @@ export async function auth(path:string,body:object){configured();const r=await f
  email_address_not_authorized:'O envio de confirmação para este endereço exige configurar um serviço SMTP no Supabase.',
  over_email_send_rate_limit:'O limite de envio de e-mails de confirmação foi atingido. Aguarde antes de tentar novamente e confira sua caixa de entrada e spam.',
  over_request_rate_limit:'Muitas tentativas em pouco tempo. Aguarde antes de tentar novamente.',
- email_not_confirmed:'Confirme seu e-mail antes de entrar. Confira sua caixa de entrada e spam.',
+ email_not_confirmed:'Sua conta ainda não está ativada. Abra o e-mail de confirmação e clique no link para ativar seu acesso. Confira também a pasta de spam.',
  invalid_credentials:'E-mail ou senha incorretos.',
  weak_password:'Escolha uma senha mais forte, conforme os requisitos do cadastro.',
  signup_disabled:'O cadastro está desativado no Supabase.',
  email_address_invalid:'Informe um endereço de e-mail válido.'
  };
- const message=messages[data.error_code||data.code]||(r.status===429?'O Supabase limitou temporariamente as tentativas ou o envio de confirmação. Aguarde e confira se recebeu o e-mail antes de tentar novamente.':'Não foi possível entrar ou cadastrar. Confira seus dados ou tente novamente mais tarde.');
+ const code=data.error_code||data.code||(/email.*not.*confirmed/i.test(String(data.msg||data.message||data.error_description||''))?'email_not_confirmed':'');
+ const message=messages[code]||(r.status===429?'O Supabase limitou temporariamente as tentativas ou o envio de confirmação. Aguarde e confira se recebeu o e-mail antes de tentar novamente.':'Não foi possível entrar ou cadastrar. Confira seus dados ou tente novamente mais tarde.');
  throw new AccessError(message,r.status===429?429:r.status>=500?503:400);
  }return data}
 

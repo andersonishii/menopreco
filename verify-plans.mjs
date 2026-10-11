@@ -17,3 +17,10 @@ assert.equal(new URL(called).searchParams.get('redirect_to'),'https://site.examp
 assert.equal((await account(req('account',{action:'reset',accessToken:'test-recovery',password:'test-only-password'},false))).status,200);
 assert.equal(options.method,'PUT');assert.equal(options.headers.Authorization,'Bearer test-recovery');
 console.log('OK: login obrigatório, gratuito único, link de recuperação e redefinição autenticada.');
+
+globalThis.fetch=async()=>Response.json({error_code:'email_not_confirmed'},{status:400});
+let unconfirmed=await account(req('account',{action:'login',email:'test@example.com',password:'test-password'},false));
+assert.equal(unconfirmed.status,400);assert.match((await unconfirmed.json()).error,/conta ainda não está ativada/);
+globalThis.fetch=async()=>Response.json({msg:'Email not confirmed'},{status:400});
+unconfirmed=await account(req('account',{action:'login',email:'test@example.com',password:'test-password'},false));assert.match((await unconfirmed.json()).error,/ativar seu acesso/);
+console.log('PASS: conta sem confirmação orienta ativação por e-mail.');

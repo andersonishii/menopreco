@@ -37,3 +37,5 @@ export async function auth(path:string,body:object){configured();const r=await f
  }return data}
 
 export async function resetPassword(token:string,password:string){configured();const response=await fetch(url()+'/auth/v1/user',{method:'PUT',headers:{apikey:pub()!,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password}),signal:AbortSignal.timeout(15000)});if(!response.ok)throw new AccessError('Não foi possível redefinir a senha. Solicite um novo link e escolha uma senha forte.',400);}
+
+export async function confirmEmail(token:string){configured();const response=await fetch(url()+'/auth/v1/user',{headers:{apikey:pub()!,Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000)});if(!response.ok)throw new AccessError('Não foi possível validar a confirmação. Tente entrar com seu e-mail e senha.',400);const user=await response.json();if(!user.email_confirmed_at)throw new AccessError('Sua conta ainda precisa da confirmação do e-mail.',400);return {email:user.email};}

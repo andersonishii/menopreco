@@ -24,3 +24,8 @@ assert.equal(unconfirmed.status,400);assert.match((await unconfirmed.json()).err
 globalThis.fetch=async()=>Response.json({msg:'Email not confirmed'},{status:400});
 unconfirmed=await account(req('account',{action:'login',email:'test@example.com',password:'test-password'},false));assert.match((await unconfirmed.json()).error,/ativar seu acesso/);
 console.log('PASS: conta sem confirmação orienta ativação por e-mail.');
+
+globalThis.fetch=async()=>Response.json({email:'test@example.com',email_confirmed_at:'2026-10-12T12:00:00Z'});
+const confirmation=await account(req('account',{action:'confirm',accessToken:'test-token'},false));assert.equal(confirmation.status,200);assert.equal((await confirmation.json()).email,'test@example.com');assert.equal(confirmation.headers.get('set-cookie'),null);
+globalThis.fetch=async()=>Response.json({email:'test@example.com'});assert.equal((await account(req('account',{action:'confirm',accessToken:'test-token'},false))).status,400);
+console.log('PASS: confirmação validada sem login automático; conta não confirmada rejeitada.');

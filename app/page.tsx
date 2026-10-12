@@ -68,10 +68,11 @@ export default function Page(){
  const [input,setInput]=useState(''),[term,setTerm]=useState(''),[categories,setCategories]=useState<Category[]>([]),[category,setCategory]=useState<Category|null>(null),[products,setProducts]=useState<Product[]>([]),[step,setStep]=useState(1),[busy,setBusy]=useState(false),[error,setError]=useState(''),[offset,setOffset]=useState(0),[more,setMore]=useState(false),[sort,setSort]=useState('recent-day'),[requestOrder,setRequestOrder]=useState('2');
  useEffect(()=>{setProducts([]);setCategories([]);setCategory(null);setStep(1);setRestoredAt(0);setTerm('');setInput('');setMore(false);setOffset(0);},[cacheOwner]);
  useSavedResults(cacheOwner?'search:'+cacheOwner:null,{city,radius,mode,input,term,categories,category,products,step,offset,more,sort,requestOrder,directOffers,offerOrders,distanceTolerance},(saved,at)=>{
-  if(!['description','barcode','shopping','fuel'].includes(saved.mode)||!Array.isArray(saved.products)||!Array.isArray(saved.categories)||![1,2,3].includes(saved.step)||saved.city?.geohash!==city.geohash||saved.radius!==radius)return;
+  if(!['description','barcode','shopping','fuel'].includes(saved.mode)||!Array.isArray(saved.products)||!Array.isArray(saved.categories)||![1,2,3].includes(saved.step)||typeof saved.city?.name!=='string'||typeof saved.city?.geohash!=='string'||!/^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(saved.city.geohash)||!Number.isInteger(saved.radius)||saved.radius<1||saved.radius>30)return;
+  setCity(saved.city);setCityInput(saved.city.name);setRadius(saved.radius);setNeedsManualCity(false);setCityError('');
   setMode(saved.mode);setInput(saved.input||'');setTerm(saved.term||'');setCategories(saved.categories);setCategory(saved.category||null);setProducts(saved.products);setStep(saved.step);setOffset(saved.offset||0);setMore(!!saved.more);setSort(saved.sort||'recent-day');setRequestOrder(['0','1','2','3'].includes(saved.requestOrder)?saved.requestOrder:'2');setDirectOffers(!!saved.directOffers);setOfferOrders(saved.offerOrders||{});setDistanceTolerance(saved.distanceTolerance||0);setRestoredAt(at);
   if(saved.city.device){setCity(saved.city);setCityInput(saved.city.name);setNeedsManualCity(false);setCityError('');setLocationMessage('Usando a localização da última pesquisa salva. Use “Usar minha localização” para atualizar sua posição.');}
- },!busy&&!cityBusy&&!needsManualCity);
+ },!busy&&!cityBusy&&!needsManualCity&&(step>1||mode==='shopping'||mode==='fuel'));
  async function query<T>(kind:string,params:Record<string,string>):Promise<T>{
   if(needsManualCity)throw new Error('Selecione uma cidade do Paraná antes de pesquisar.');
   const apiParams=new URLSearchParams({local:city.geohash,raio:String(radius),...params});

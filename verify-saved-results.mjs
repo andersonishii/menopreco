@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {stripTypeScriptTypes} from 'node:module';
+const source=stripTypeScriptTypes(fs.readFileSync('lib/saved-results.ts','utf8')).replace(/^import .*;$/gm,'').replace(/export /g,'');
+const storage=new Map();const localStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)};
+const {read,write}=new Function('localStorage',source+';return {read:readSavedResults,write:writeSavedResults};')(localStorage);
+const state={products:[{id:'test',valor:'10'}],sort:'1',radius:5};write('user-one',state);assert.deepEqual(read('user-one').data,state);assert.equal(read('user-two'),null);
+write('expired',state,Date.now()-8*86400000);assert.equal(read('expired'),null);
+storage.set('preco-perto-results-v1:broken','invalid');assert.equal(read('broken'),null);
+write('too-large',{value:'x'.repeat(2100000)});assert.equal(read('too-large'),null);
+const failed=new Function('localStorage',source+';return {read:readSavedResults,write:writeSavedResults};')({getItem(){throw Error();},setItem(){throw Error();}});assert.equal(failed.read('test'),null);assert.doesNotThrow(()=>failed.write('test',state));
+console.log('PASS: resultados e filtros, isolamento por conta, expiração e armazenamento indisponível.');

@@ -1,9 +1,12 @@
+import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {stripTypeScriptTypes} from 'node:module';
-import {distancePriceOrder,distanceToleranceOrder} from './lib/product-groups.ts';
+import {offerPrice,discountOrder} from './lib/offer-price.ts';
+const {distancePriceOrder,distanceToleranceOrder}=await import('./lib/product-groups.ts');
 const source=stripTypeScriptTypes(fs.readFileSync('lib/shopping-price.ts','utf8')).replace(/^import .*;$/gm,'').replace(/export /g,'');
-const choose=new Function('distancePriceOrder','distanceToleranceOrder',source+';return chooseShoppingOffer;')(distancePriceOrder,distanceToleranceOrder);
+const choose=new Function('offerPrice','discountOrder','distancePriceOrder','distanceToleranceOrder',source+';return chooseShoppingOffer;')(offerPrice,discountOrder,distancePriceOrder,distanceToleranceOrder);
 const code='7898024394938',now=new Date('2026-10-11T15:00:00Z');
 const offer=(id,price,distance,date='2026-10-11T12:00:00Z')=>({id,gtin:code,desc:'Produto',valor_tabela:String(price),distkm:distance,datahora:date,tempo:'hoje',estabelecimento:{}});
 const offers=[offer('farCheap',5,'3'),offer('near',20,'0.5'),offer('nearCheap',10,'0.504'),offer('missing',1,'')];

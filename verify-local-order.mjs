@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const source=fs.readFileSync('app/page.tsx','utf8');
+const code=source.slice(source.indexOf('function localOnlyOrder'),source.indexOf('type Product=Offer;')).replace('value:string','value');
+const isLocal=new Function(code+';return localOnlyOrder;')();
+assert.equal(isLocal('discount'),true);assert.equal(isLocal('offers-asc'),true);assert.equal(isLocal('1'),false);
+const start=source.slice(source.indexOf('const options='),source.indexOf('const resultOptions='));assert.ok(!start.includes("value:'discount'"));
+assert.ok(source.includes("const resultOptions=[...options,{value:'discount'"));
+const handler=source.slice(source.indexOf('function changeOrder'),source.indexOf('function changeMode'));assert.ok(!handler.includes('fetch')&&!handler.includes('load('));
+console.log('PASS: desconto apenas nos resultados, ordenação local e nova busca preserva ordem da API.');

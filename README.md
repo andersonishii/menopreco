@@ -53,3 +53,14 @@ Verificações locais: `node verify-access.mjs` e `npm run build` em render-app.
 A coluna `credit_accounts.unlimited_access` permite consultas ilimitadas quando `true`, sem consumir saldo. Somente o administrador no Supabase ou o servidor pode alterá-la; não há opção pública para ativação. A conta continua exigindo login e e-mail confirmado.
 
 As buscas de categorias e produtos tentam primeiro a API pelo navegador, usando a conexão do usuário. Login e crédito são validados no servidor antes da consulta. Se ocorrer CORS, erro de rede ou resposta inválida, a consulta usa o Render com a mesma autorização, sem novo desconto. Nenhum cookie de login ou autorização é enviado ao Nota Paraná.
+
+
+### Estados participantes do Menor Preço Brasil
+
+Configure `MENOR_PRECO_BRASIL_TOKEN` nas variáveis de ambiente do Render com um token válido do serviço nacional. Nunca coloque esse valor em uma variável `NEXT_PUBLIC_*` ou no Git. Quando expirar, a configuração precisa ser atualizada; a aplicação não implementa login gov.br nem renovação automática.
+
+A lista dos novos estados vem de `Config/UfsParticipantes`, incluindo somente `possuiModulo === true`. O Paraná usa sua integração anterior como exceção explícita. Nos outros estados, a descrição usa `Item/PorDescricao`, o código de barras usa `Item/PorGtin` (NCM é classificação fiscal) e combustível usa `Item/PorCombustivel`.
+
+As consultas nacionais usam a latitude e longitude autorizadas pelo usuário ou as coordenadas de referência do município selecionado. A busca por município e UF usa a base [Municípios Brasileiros](https://github.com/kelvins/municipios-brasileiros), com licença em `public/municipalities-source.txt`. O resultado nacional é adaptado aos cartões existentes e não possui etapa de categoria nem paginação inventada. Apenas as ofertas retornadas são comparadas e ordenadas.
+
+Validação: `node --experimental-strip-types verify-brasil.mjs`, `verify-city.mjs`, `verify-location.mjs` e build do `render-app`.

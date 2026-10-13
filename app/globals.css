@@ -78,3 +78,5 @@ html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-size:16px;line-hei
 .saved-results-notice{padding:12px 16px;margin:16px;border:1px solid #b9ccba;border-radius:10px;background:#eef5ec;color:#36573b;font-size:14px;line-height:1.6}
 
 .results-order{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:#35533f;max-width:340px}.results-order small{font-size:12px;font-weight:400}.results-order select{width:100%}
+
+#search-state{display:block;width:100%;background:white;border:1px solid #b9cbb6;border-radius:10px;padding:12px;margin:8px 0 18px;min-height:52px;color:#23382f}

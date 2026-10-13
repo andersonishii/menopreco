@@ -1,13 +1,16 @@
 import fs from 'node:fs';
+import {stripTypeScriptTypes} from 'node:module';
 import assert from 'node:assert/strict';
 const page=fs.readFileSync('app/page.tsx','utf8');
 const encode=page.slice(page.indexOf('function locationGeohash'),page.indexOf('type Product=Offer;')).replace('latitude:number,longitude:number','latitude,longitude');
 const action=page.slice(page.indexOf(' function useMyLocation(){'),page.indexOf(' const [directOffers'));
 let success,failure,selected,message,error,cityBusy=false,manualRequests=0;
-const run=new Function('navigator','fetch','selectCity','setCityBusy','setLocating','setCityError','setLocationMessage','busy','cityBusy',encode+'function setNeedsManualCity(){}function requestManualCity(){setLocating(\"manual\");}'+action+';useMyLocation();');
+const run=new Function('navigator','fetch','selectCity','setCityBusy','setLocating','setCityError','setLocationMessage','busy','cityBusy',stripTypeScriptTypes(encode)+'function setNeedsManualCity(){}function requestManualCity(){setLocating(\"manual\");}'+stripTypeScriptTypes(action)+';useMyLocation();');
 const setters=[value=>{selected=value;},value=>{cityBusy=value;},value=>{if(value==='manual')manualRequests++;},value=>{error=value;},value=>{message=value;}];
+const config={estados:[{sigla:'PR'},{sigla:'RS'}]};
+const withConfig=reply=>async(url)=>String(url).includes('/api/brasil/estados')?{ok:true,json:async()=>config}:reply();
 const navigator={geolocation:{getCurrentPosition:(ok,no)=>{success=ok;failure=no;}}};
-run(navigator,async()=>({ok:true,json:async()=>({city:'Ponta Grossa',principalSubdivisionCode:'BR-PR'})}),...setters,false,false);
+run(navigator,withConfig(async()=>({ok:true,json:async()=>({city:'Ponta Grossa',principalSubdivisionCode:'BR-PR'})})),...setters,false,false);
 assert.match(message,/Aguardando/);
 await success({coords:{latitude:-25.0891685,longitude:-50.1601812,accuracy:10}});
 assert.equal(selected.name,'Ponta Grossa / PR');assert.equal(selected.geohash,'6gs368dmp');assert.equal(cityBusy,false);assert.match(message,/identificada/);
@@ -18,6 +21,10 @@ run(navigator,async()=>{},...setters,false,false);failure({code:1});assert.match
 console.log('Localização: cidade identificada, geohash preservado, falha de serviço e permissão negada conferidos.');
 
 assert.equal(manualRequests,2);
-run(navigator,async()=>({ok:true,json:async()=>({city:'São Paulo',principalSubdivisionCode:'BR-SP'})}),...setters,false,false);
-await success({coords:{latitude:-23.55,longitude:-46.63,accuracy:10}});assert.match(error,/fora do Paraná/);assert.equal(manualRequests,3);
-console.log('PASS: localização fora do Paraná e estado não confirmado exigem seleção manual.');
+run(navigator,withConfig(async()=>({ok:true,json:async()=>({city:'São Paulo',principalSubdivisionCode:'BR-SP'})})),...setters,false,false);
+await success({coords:{latitude:-23.55,longitude:-46.63,accuracy:10}});assert.match(error,/estado ainda não atendido/);assert.equal(manualRequests,3);
+console.log('PASS: estado indisponível e estado não confirmado exigem seleção manual.');
+
+run(navigator,withConfig(async()=>({ok:true,json:async()=>({city:'Porto Alegre',principalSubdivisionCode:'BR-RS'})})),...setters,false,false);
+await success({coords:{latitude:-30.0277,longitude:-51.2287,accuracy:10}});assert.equal(selected.uf,'RS');assert.equal(selected.latitude,-30.0277);assert.equal(selected.longitude,-51.2287);
+console.log('PASS: GPS aceita participante RS e preserva coordenadas do dispositivo.');

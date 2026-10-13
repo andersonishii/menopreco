@@ -24,3 +24,11 @@ assert.equal(choose(tolerant,code,'distance',now,1).offer.id,'bestNearby');
 assert.equal(choose(tolerant,code,'distance',now,0).offer.id,'closest');
 assert.deepEqual(distanceToleranceOrder(tolerant,1).map(o=>o.id),['bestNearby','closest','outside']);
 console.log('PASS: tolerância adicional, preço na faixa, exclusão de oferta além da faixa e zero sem tolerância.');
+
+const samePrice=[offer('farLatest',5.98,'15.09','2026-10-11T14:00:00Z'),offer('nearEarlier',5.98,'2.5','2026-10-11T12:00:00Z')];
+for(const policy of ['cheapest','today','recent','discount','distance'])assert.equal(choose(samePrice,code,policy,now).offer.id,'nearEarlier');
+assert.equal(choose([offer('unknown',5.98,''),samePrice[1]],code,'recent',now).offer.id,'nearEarlier');
+assert.equal(choose([offer('invalid',5.98,'NaN'),samePrice[1]],code,'recent',now).offer.id,'nearEarlier');
+assert.equal(choose([offer('veryClose',5.98,'2.501','2026-10-11T12:00:00Z'),offer('slightlyFar',5.98,'2.504','2026-10-11T14:00:00Z')],code,'distance',now).offer.id,'veryClose');
+assert.equal(choose(samePrice,code,'distance',now,20).offer.id,'nearEarlier');
+console.log('PASS: preço igual prioriza menor distância antes da hora; distância ausente não vira zero.');

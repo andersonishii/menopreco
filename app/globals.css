@@ -80,3 +80,5 @@ html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-size:16px;line-hei
 .results-order{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:#35533f;max-width:340px}.results-order small{font-size:12px;font-weight:400}.results-order select{width:100%}
 
 #search-state{display:block;width:100%;background:white;border:1px solid #b9cbb6;border-radius:10px;padding:12px;margin:8px 0 18px;min-height:52px;color:#23382f}
+
+.account-panel .account-error{padding:16px 18px;border:1px solid #d67878;border-left:5px solid #b42323;border-radius:10px;background:#fff0f0;color:#961d1d;font-size:16px;line-height:1.6;scroll-margin:24px}.account-error strong{display:block;margin-bottom:5px;color:#8b1515}.account-body input[aria-invalid="true"]{border:2px solid #ba3030;background:#fff7f7}

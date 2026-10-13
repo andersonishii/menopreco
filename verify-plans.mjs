@@ -29,3 +29,6 @@ globalThis.fetch=async()=>Response.json({email:'test@example.com',email_confirme
 const confirmation=await account(req('account',{action:'confirm',accessToken:'test-token'},false));assert.equal(confirmation.status,200);assert.equal((await confirmation.json()).email,'test@example.com');assert.equal(confirmation.headers.get('set-cookie'),null);
 globalThis.fetch=async()=>Response.json({email:'test@example.com'});assert.equal((await account(req('account',{action:'confirm',accessToken:'test-token'},false))).status,400);
 console.log('PASS: confirmação validada sem login automático; conta não confirmada rejeitada.');
+
+for(const code of ['invalid_credentials','invalid_login_credentials']){globalThis.fetch=async()=>Response.json({error_code:code},{status:400});const invalid=await account(req('account',{action:'login',email:'test@example.com',password:'incorrect-password'},false));assert.equal(invalid.status,400);assert.match((await invalid.json()).error,/E-mail ou senha inválidos/);}
+console.log('PASS: credenciais inválidas retornam orientação clara.');

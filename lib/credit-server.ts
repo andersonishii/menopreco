@@ -26,7 +26,8 @@ export async function auth(path:string,body:object){configured();const r=await f
  over_email_send_rate_limit:'O limite de envio de e-mails de confirmação foi atingido. Aguarde antes de tentar novamente e confira sua caixa de entrada e spam.',
  over_request_rate_limit:'Muitas tentativas em pouco tempo. Aguarde antes de tentar novamente.',
  email_not_confirmed:'Sua conta ainda não está ativada. Abra o e-mail de confirmação e clique no link para ativar seu acesso. Confira também a pasta de spam.',
- invalid_credentials:'E-mail ou senha incorretos.',
+ invalid_credentials:'E-mail ou senha inválidos. Confira os dados e tente novamente.',
+ invalid_login_credentials:'E-mail ou senha inválidos. Confira os dados e tente novamente.',
  weak_password:'Escolha uma senha mais forte, conforme os requisitos do cadastro.',
  signup_disabled:'O cadastro está desativado no Supabase.',
  email_address_invalid:'Informe um endereço de e-mail válido.'

@@ -11,10 +11,10 @@ import {fuelPriceVariations,type Store} from '../lib/offer-details';
 import {useState} from 'react';
 type FuelOffer={id:string;gtin?:string;datahora?:string;desc:string;valor:string;valor_tabela:string;valor_desconto?:string;tempo:string;distkm:string;estabelecimento:Store};
 const fuels=[['1','Gasolina'],['2','Gasolina aditivada'],['3','Etanol'],['4','Diesel'],['5','GNV']];
-const orders=[['recent-day','Menor preço do dia ou o mais recente possível'],['0','Menor preço'],['3','Maior preço'],['2','Vendas mais recentes'],['1','Menor distância'],['discount','Maior desconto concedido (R$)']];
+const orders=[['recent-day','Menor preço do dia ou o mais recente possível'],['0','Menor preço'],['3','Maior preço'],['2','Vendas mais recentes'],['1','Menor distância e menor preço'],['discount','Maior desconto concedido (R$)']];
 export default function FuelSearch({local,cityName,onBusy,radius=7,cacheOwner,searchLocation}:{searchLocation?:SearchLocation;cacheOwner?:string|null;radius?:number;local:string;cityName:string;onBusy:(busy:boolean)=>void}){
- const [fuel,setFuel]=useState('1'),[order,setOrder]=useState('0'),[offers,setOffers]=useState<FuelOffer[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[searched,setSearched]=useState(false),[offset,setOffset]=useState(0),[more,setMore]=useState(false);
- const [requestOrder,setRequestOrder]=useState('0');
+ const [fuel,setFuel]=useState('1'),[order,setOrder]=useState('1'),[offers,setOffers]=useState<FuelOffer[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[searched,setSearched]=useState(false),[offset,setOffset]=useState(0),[more,setMore]=useState(false);
+ const [requestOrder,setRequestOrder]=useState('1');
  const [restoredAt,setRestoredAt]=useState(0);
  useSavedResults(cacheOwner?'fuel:'+cacheOwner+':'+local+':'+radius:null,{fuel,order,offers,searched,offset,more,requestOrder},(saved,at)=>{if(!Array.isArray(saved.offers)||!fuels.some(f=>f[0]===saved.fuel)||!orders.some(o=>o[0]===saved.order))return;setFuel(saved.fuel);setOrder(saved.order);setRequestOrder(['0','1','2','3'].includes(saved.requestOrder)?saved.requestOrder:'0');setOffers(saved.offers);setSearched(!!saved.searched);setOffset(saved.offset||0);setMore(!!saved.more);setRestoredAt(at);},!busy);
  async function load(next=0,selectedOrder=order){if(busy)return;setRestoredAt(0);setBusy(true);onBusy(true);setError('');setSearched(true);if(!next){setOffers([]);setMore(false);setOffset(0);}try{

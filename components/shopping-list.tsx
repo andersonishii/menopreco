@@ -17,7 +17,7 @@ type Item={code:string;quantity:number;status:'pending'|'found'|'empty'|'error';
 const money=(cents:number)=>(cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 export default function ShoppingList({onBusy,local,cityName,radius=22,cacheOwner,searchLocation}:{searchLocation?:SearchLocation;cacheOwner?:string|null;radius?:number;onBusy:(value:boolean)=>void;local:string;cityName:string}){
  const [distanceTolerance,setDistanceTolerance]=useState(0),[resultTolerance,setResultTolerance]=useState(0);
- const [policy,setPolicy]=useState<PricePolicy>('recent'),[resultPolicy,setResultPolicy]=useState<PricePolicy>('recent');
+ const [policy,setPolicy]=useState<PricePolicy>('distance'),[resultPolicy,setResultPolicy]=useState<PricePolicy>('distance');
  const [text,setText]=useState(''),[items,setItems]=useState<Item[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[ready,setReady]=useState(false);
  const [restoredAt,setRestoredAt]=useState(0);
  useSavedResults(cacheOwner?'shopping:'+cacheOwner+':'+local+':'+radius:null,{text,items,policy,resultPolicy,distanceTolerance,resultTolerance},(saved,at)=>{if(!Array.isArray(saved.items)||!Object.keys(policyLabels).includes(saved.policy)||!Object.keys(policyLabels).includes(saved.resultPolicy))return;setText(saved.text||'');setItems(saved.items.filter((item:Item)=>item.status!=='pending'));setPolicy(saved.policy);setResultPolicy(saved.resultPolicy);setDistanceTolerance(saved.distanceTolerance||0);setResultTolerance(saved.resultTolerance||0);setRestoredAt(at);},!busy&&ready);

@@ -13,3 +13,8 @@ export function fuelWithinRadius<T extends {distkm:string}>(offers:T[],radius:nu
  if(!Number.isFinite(radius)||radius<1||radius>30)return [];
  return offers.filter(offer=>{const raw=String(offer.distkm??'').trim(),distance=Number(raw);return raw!==''&&Number.isFinite(distance)&&distance>=0&&distance<=radius;});
 }
+
+export function fuelPriceDistanceOrder(a:Offer,b:Offer){
+ const distance=(offer:Offer)=>{const raw=String(offer.distkm??'').trim(),value=Number(raw);return raw!==''&&Number.isFinite(value)&&value>=0?value:Infinity;};
+ const price=offerPrice(a)-offerPrice(b);if(price)return price;const da=distance(a),db=distance(b);return da===db?0:da<db?-1:1;
+}

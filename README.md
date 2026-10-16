@@ -57,10 +57,18 @@ As buscas de categorias e produtos tentam primeiro a API pelo navegador, usando 
 
 ### Estados participantes do Menor Preço Brasil
 
-Configure `MENOR_PRECO_BRASIL_TOKEN` nas variáveis de ambiente do Render com um token válido do serviço nacional. Nunca coloque esse valor em uma variável `NEXT_PUBLIC_*` ou no Git. Quando expirar, a configuração precisa ser atualizada; a aplicação não implementa login gov.br nem renovação automática.
+A autenticação nacional é individual por usuário. A variável compartilhada `MENOR_PRECO_BRASIL_TOKEN` não é mais usada. Execute `supabase/mpbr-connections.sql` uma vez no Supabase (tabela privada com RLS e sem acesso direto para usuários). Cada usuário entra na conta do site e conecta sua própria autorização do Menor Preço Brasil.
+
+No site: inicie a conexão, abra o gov.br em outra aba, autentique-se somente na página oficial e cole o link completo `br.gov.rs.procergs.mpbr://oauth/auth?code=...&state=...`. O client e o redirect URI correspondem aos do script fornecido. O retorno é nativo; esta versão não captura o console nem substitui o redirect por um domínio não autorizado. Para retorno web automático, é necessária uma integração autorizada com redirect web cadastrado pelo provedor.
+
+O backend gera PKCE S256, nonce e state exclusivos. O verifier fica em cookie HttpOnly criptografado, vinculado à conta e com validade de dez minutos. O código e o token não são gravados no localStorage nem devolvidos ao JavaScript do site. Após a troca, os tokens são criptografados com AES-256-GCM e AAD por usuário, gravados em `mpbr_connections` usando service_role. A chave deriva de `MPBR_TOKEN_ENCRYPTION_KEY` ou, quando ausente, de `SUPABASE_SECRET_KEY`, com separação de finalidade. Se a chave usada for alterada, as conexões existentes precisam ser refeitas. Nunca exponha essas variáveis como `NEXT_PUBLIC_*`.
+
+A renovação usa `Login/refresh_token` quando houver refresh_token; sem ele, uma conexão vencida pede novo login. O Paraná continua usando sua API sem conexão MPBR. O saldo só é descontado para estados nacionais após conferir a conexão individual. A opção de desconectar remove a autorização armazenada neste site; não revoga globalmente a conta gov.br.
 
 A lista dos novos estados vem de `Config/UfsParticipantes`, incluindo somente `possuiModulo === true`. O Paraná usa sua integração anterior como exceção explícita. Nos outros estados, a descrição usa `Item/PorDescricao`, o código de barras usa `Item/PorGtin` (NCM é classificação fiscal) e combustível usa `Item/PorCombustivel`.
 
 As consultas nacionais usam a latitude e longitude autorizadas pelo usuário ou as coordenadas de referência do município selecionado. A busca por município e UF usa a base [Municípios Brasileiros](https://github.com/kelvins/municipios-brasileiros), com licença em `public/municipalities-source.txt`. O resultado nacional é adaptado aos cartões existentes e não possui etapa de categoria nem paginação inventada. Apenas as ofertas retornadas são comparadas e ordenadas.
 
 Validação: `node --experimental-strip-types verify-brasil.mjs`, `verify-city.mjs`, `verify-location.mjs` e build do `render-app`.
+
+Teste de autenticação individual: `node --experimental-strip-types verify-mpbr-auth.mjs`.

@@ -72,3 +72,6 @@ As consultas nacionais usam a latitude e longitude autorizadas pelo usuário ou 
 Validação: `node --experimental-strip-types verify-brasil.mjs`, `verify-city.mjs`, `verify-location.mjs` e build do `render-app`.
 
 Teste de autenticação individual: `node --experimental-strip-types verify-mpbr-auth.mjs`.
+
+
+Extensão experimental para retorno MPBR no Chrome: fonte e instalação em `extensions/preco-perto/README.md`, pacote em `/preco-perto-chrome.zip`. Usa a permissão debugger apenas na aba criada para login, com prazo de 10 minutos; captura depende dos eventos disponibilizados pelo Chrome. Não é integração oficial e o teste real com gov.br continua necessário. Verificação simulada: `node verify-mpbr-extension.mjs`. Após alterar a extensão, regenere o ZIP incluindo somente os arquivos da pasta `extensions/preco-perto` na raiz do pacote.

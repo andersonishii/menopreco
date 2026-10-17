@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Preço Perto — conexão MPBR (experimental)",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minimum_chrome_version": "118",
   "description": "Auxilia o retorno do login MPBR iniciado no Preço Perto, com autorização do usuário.",
   "permissions": ["debugger", "storage", "alarms"],

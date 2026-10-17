@@ -1,5 +1,12 @@
 export const siteOrigin='https://menopreco-1.onrender.com';
 export const redirect='br.gov.rs.procergs.mpbr://oauth/auth';
+export function eventReturn(method,params){
+ if(method==='Log.entryAdded')return params.entry?.text;
+ if(['Page.frameRequestedNavigation','Page.frameScheduledNavigation','Page.frameStartedNavigating'].includes(method))return params.url;
+ if(method==='Network.responseReceivedExtraInfo'&&params.statusCode>=300&&params.statusCode<400)return Object.entries(params.headers||{}).find(([name])=>name.toLowerCase()==='location')?.[1];
+ if(method==='Network.requestWillBeSent')return params.request?.url;
+ return null;
+}
 export function authorize(value){
  const url=new URL(value);
  if(url.origin!=='https://sso.acesso.gov.br'||url.pathname!=='/authorize'||url.username||url.password||url.hash)throw Error('Endereço de login inválido.');

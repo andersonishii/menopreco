@@ -1,4 +1,4 @@
-import {authorize,callback,siteOrigin} from './guards.js';
+import {authorize,callback,siteOrigin,eventReturn} from './guards.js';
 const key=id=>'flow:'+id;
 const finishing=new Set();
 async function stop(id,message){
@@ -21,14 +21,15 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
    await chrome.debugger.attach({tabId:tab.id},'1.3');
    await chrome.debugger.sendCommand({tabId:tab.id},'Log.enable');
    await chrome.debugger.sendCommand({tabId:tab.id},'Page.enable');
+   await chrome.debugger.sendCommand({tabId:tab.id},'Network.enable',{maxPostDataSize:0});
    await chrome.tabs.update(tab.id,{url:auth.url});respond({ok:true});
   }catch{await stop(tab.id);throw Error('O Chrome não permitiu a captura. Feche o DevTools e tente novamente, ou use a conexão manual.');}
  })().catch(error=>respond({ok:false,error:error.message}));return true;
 });
 chrome.debugger.onEvent.addListener((source,method,params)=>{
  const id=source.tabId;if(!id||finishing.has(id))return;
- // Subscribe only to navigation and browser log events, never DOM or input events.
- const text=method==='Log.entryAdded'?params.entry?.text:method==='Page.frameRequestedNavigation'?params.url:null;
+ // Inspect only return URLs, redirect Location and browser logs. Never request bodies, DOM or input values.
+ const text=eventReturn(method,params);
  if(typeof text!=='string'||!text.includes('br.gov.rs.procergs.mpbr://'))return;
  void (async()=>{
   const flow=(await chrome.storage.session.get(key(id)))[key(id)];if(!flow)return;
@@ -36,9 +37,11 @@ chrome.debugger.onEvent.addListener((source,method,params)=>{
   const url=callback(text,flow.state);if(!url||finishing.has(id))return;finishing.add(id);
   try{
    const owner=await chrome.tabs.get(flow.owner);if(new URL(owner.url).origin!==siteOrigin)throw Error();
-   await chrome.tabs.sendMessage(flow.owner,{type:'callback',url},{frameId:0});
-   await stop(id);await chrome.tabs.update(flow.owner,{active:true});
+   await chrome.tabs.update(flow.owner,{active:true});
    if(owner.windowId)await chrome.windows.update(owner.windowId,{focused:true});
+   await chrome.tabs.sendMessage(flow.owner,{type:'callback',url},{frameId:0});
+   await stop(id);
+   await chrome.tabs.remove(id);
   }catch{await stop(id,'Não foi possível entregar o retorno. Volte ao site e use a conexão manual.');}
   finally{finishing.delete(id);}
  })().catch(()=>{});

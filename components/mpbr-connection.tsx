@@ -5,7 +5,7 @@ export default function MpbrConnection(){
  const [extensionReady,setExtensionReady]=useState(false);
  const [extensionVersion,setExtensionVersion]=useState('');
  const receiving=useRef(false);
- const [visible,setVisible]=useState(true);
+ const [visible,setVisible]=useState(false);
  useEffect(()=>{if(visible)document.getElementById("mpbr-connection")?.scrollIntoView({behavior:"smooth",block:"center"});},[visible]);
  const [connected,setConnected]=useState(false),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[authorizeUrl,setAuthorizeUrl]=useState(''),[callbackUrl,setCallbackUrl]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState(''),[expiresAt,setExpiresAt]=useState<string|null>(null);
  useEffect(()=>{let active=true;void (async()=>{try{const response=await fetch('/api/brasil/conexao',{cache:'no-store'}),data=await response.json();if(!active)return;if(!response.ok)throw new Error(data.error);setConnected(!!data.connected);setExpiresAt(data.expiresAt||null);}catch(error){if(active)setError((error as Error).message);}finally{if(active)setLoading(false);}})();return()=>{active=false;};},[]);

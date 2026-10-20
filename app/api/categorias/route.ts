@@ -1,3 +1,4 @@
+import {expandParanaDescription} from '../../../lib/parana-description';
 import {requireSearch,fail} from '../../../lib/credit-server';
 import {readDescriptionResponse} from '../../../lib/description-response';
 export async function GET(request:Request){
@@ -9,5 +10,5 @@ export async function GET(request:Request){
  if(!termo||termo.length>120)return Response.json({error:'Informe uma descrição de até 120 caracteres.'},{status:400});
  const url=new URL('https://menorpreco.notaparana.pr.gov.br/api/v1/categorias');url.search=new URLSearchParams({local,termo,raio}).toString();
  try{await requireSearch(request);}catch(e){return fail(e);}
- try{const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(20000)});if(!response.ok)throw new Error();const result=readDescriptionResponse(await response.json());return Response.json(result.kind==='categories'?{categorias:result.categories}:{produtos:result.products},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Não foi possível consultar as categorias no Nota Paraná. Tente novamente em instantes.'},{status:502});}
+ try{const response=await fetch(url.toString(),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(20000)});if(!response.ok)throw new Error();const result=readDescriptionResponse(await response.json());const body=result.kind==='categories'?{categorias:result.categories}:new URL(request.url).searchParams.get('expand')==='1'?await expandParanaDescription(result.products,new URLSearchParams({local,raio,ordem:'2'})):{produtos:result.products};return Response.json(body,{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Não foi possível consultar as categorias no Nota Paraná. Tente novamente em instantes.'},{status:502});}
 }

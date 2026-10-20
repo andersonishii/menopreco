@@ -75,3 +75,6 @@ Teste de autenticação individual: `node --experimental-strip-types verify-mpbr
 
 
 Extensão experimental para retorno MPBR no Chrome: fonte e instalação em `extensions/preco-perto/README.md`, pacote em `/preco-perto-chrome.zip`. Usa a permissão debugger apenas na aba criada para login, com prazo de 10 minutos; captura depende dos eventos disponibilizados pelo Chrome. Não é integração oficial e o teste real com gov.br continua necessário. Verificação simulada: `node verify-mpbr-extension.mjs`. Após alterar a extensão, regenere o ZIP incluindo somente os arquivos da pasta `extensions/preco-perto` na raiz do pacote.
+
+
+Buscas por descrição complementam os GTINs encontrados com consultas por código de barras no servidor, sem reservar novos créditos. As ofertas são unificadas por GTIN; duplicatas usam GTIN, endereço, preço final e data/hora. No Paraná, o complemento percorre as páginas de cada GTIN até o retorno vazio, com proteção contra paginação repetida ou acima de 100 páginas. Falhas no complemento preservam os resultados da descrição e exibem um aviso. O MPBR usa todos os itens fornecidos pelo endpoint PorGtin, sem inventar paginação não suportada. A busca inicial continua limitada aos resultados/páginas do provedor; carregar mais descrições descobre novos GTINs. Verificação: `node --experimental-strip-types verify-description-offers.mjs`.

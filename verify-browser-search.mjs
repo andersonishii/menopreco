@@ -14,3 +14,6 @@ for(const blocked of [false,true]){
 clearGrants();globalThis.fetch=async url=>{assert.equal(url,'/api/credits');return Response.json({error:'Sem saldo'},{status:402})};
 await assert.rejects(()=>creditFetch('/api/categorias?local=6gf0ffq61&termo=arroz&raio=20'),/Sem saldo/);
 console.log('OK: navegador primeiro, CORS usa servidor sem outro crédito, nenhum grant externo, saldo obrigatório.');
+
+clearGrants();let expansionCredits=0,expansionRequests=0;globalThis.fetch=async url=>{if(url==='/api/credits'){expansionCredits++;return Response.json({grant:'description-grant'});}assert.ok(String(url).startsWith('/api/produtos?'));expansionRequests++;return Response.json({produtos:[]});};
+await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&expand=1');await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&offset=20&expand=1');assert.equal(expansionCredits,1);assert.equal(expansionRequests,2);console.log('PASS: enriquecimento no servidor e paginação usam o mesmo crédito da descrição.');

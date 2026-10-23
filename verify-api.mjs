@@ -10,3 +10,16 @@ for(const order of ['0','1','2','3']){mock(()=>Response.json({produtos:[]}));res
 assert.equal((await products(request('https://site.example/api/produtos?local=6gkzq99z5j5f&termo=arroz&categoria=abc'))).status,400);
 mock(()=>{throw Error('offline');});assert.equal((await categories(request('https://site.example/api/categorias?local=6gkzq99z5j5f&termo=arroz'))).status,502);
 console.log('PASS: Paraná preserva categorias, descrição, raio, ordenação, paginação e falhas.');
+
+// Even an older client requesting expansion must not trigger barcode lookups in Paraná.
+for(const handler of [categories,products]){
+ let upstreamCalls=0;
+ const offer={id:'sample',gtin:'7891234567895',desc:'Arroz',valor_tabela:'5.00'};
+ mock(()=>{upstreamCalls++;assert.equal(called.searchParams.has('gtin'),false);return Response.json({produtos:[offer]});});
+ const response=await handler(request('https://site.example/api/'+(handler===categories?'categorias':'produtos')+'?local=6gkzq99z5j5f&termo=arroz&categoria=6&expand=1'));
+ assert.equal(response.status,200);assert.deepEqual((await response.json()).produtos,[offer]);assert.equal(upstreamCalls,1);
+}
+mock(()=>Response.json({produtos:[]}));
+assert.equal((await products(request('https://site.example/api/produtos?local=6gkzq99z5j5f&gtin=7891234567895'))).status,200);
+assert.equal(called.searchParams.get('gtin'),'7891234567895');
+console.log('PASS: descrição no Paraná não expande GTIN; consulta direta por código de barras preservada.');

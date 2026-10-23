@@ -103,3 +103,5 @@ html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-size:16px;line-hei
 .demo-paused .demo-query{animation:none!important;width:150px}.demo-paused .demo-offer,.demo-paused .demo-saving{animation:none!important;opacity:1;transform:none}
 
 .location-notice{scroll-margin-top:16px}.location-notice .error,.location-notice .location-feedback{margin:0 0 18px;line-height:1.6}
+
+.landing-scope{font-size:13px;line-height:1.7;color:#516358;margin:12px 0 0;max-width:420px}

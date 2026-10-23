@@ -11,10 +11,11 @@ export function uniqueOffers(offers:Offer[]){
  });
 }
 // Four lookups at a time; each GTIN is requested once even when descriptions differ.
-export async function expandDescriptionOffers(initial:Offer[],lookup:(gtin:string)=>Promise<Offer[]>){
- const codes=[...new Map(initial.flatMap(offer=>{const code=normalizedGtin(offer.gtin);return code?[[code,String(offer.gtin).trim()] as const]:[];})).entries()];
+export async function expandDescriptionOffers(initial:Offer[],lookup:(gtin:string,signal:AbortSignal)=>Promise<Offer[]>){
+ const discovered=[...new Map(initial.flatMap(offer=>{const code=normalizedGtin(offer.gtin);return code?[[code,String(offer.gtin).trim()] as const]:[];})).entries()];
+ const codes=discovered.slice(0,24),signal=AbortSignal.timeout(30000);
  const batches:Offer[][]=Array.from({length:codes.length},()=>[]);let cursor=0,failed=0,fatal:unknown;
- await Promise.all(Array.from({length:Math.min(4,codes.length)},async()=>{while(cursor<codes.length&&!fatal){const index=cursor++,[code,queryCode]=codes[index];try{batches[index]=(await lookup(queryCode)).filter(offer=>normalizedGtin(offer.gtin)===code);}catch(error){if((error as {status?:number})?.status===428||(error as {status?:number})?.status===401)fatal=error;else{const partial=(error as {partialOffers?:Offer[]})?.partialOffers;if(Array.isArray(partial))batches[index]=partial.filter(offer=>normalizedGtin(offer.gtin)===code);failed++;}}}}));
- if(fatal)throw fatal;
+ await Promise.all(Array.from({length:Math.min(4,codes.length)},async()=>{while(cursor<codes.length&&!fatal&&!signal.aborted){const index=cursor++,[code,queryCode]=codes[index];try{batches[index]=(await lookup(queryCode,signal)).filter(offer=>normalizedGtin(offer.gtin)===code);}catch(error){if((error as {status?:number})?.status===428||(error as {status?:number})?.status===401)fatal=error;else{const partial=(error as {partialOffers?:Offer[]})?.partialOffers;if(Array.isArray(partial))batches[index]=partial.filter(offer=>normalizedGtin(offer.gtin)===code);failed++;}}}}));
+ if(fatal)throw fatal;failed+=discovered.length-cursor;
  return {produtos:uniqueOffers([...initial,...batches.flat()]),expandedGtins:codes.length-failed,expansionWarning:failed?'Não foi possível completar a consulta por código de barras de '+failed+' produto(s). Exibimos as ofertas obtidas; tente uma nova busca para completar.':null};
 }

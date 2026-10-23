@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-23",
+  "rootFull": {
+    "counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 4,
+      "high": 17,
+      "critical": 0,
+      "total": 21
+    },
+    "packages": [
+      {
+        "name": "@cloudflare/vite-plugin",
+        "severity": "high",
+        "direct": true
+      },
+      {
+        "name": "@esbuild-kit/core-utils",
+        "severity": "moderate",
+        "direct": false
+      },
+      {
+        "name": "@esbuild-kit/esm-loader",
+        "severity": "moderate",
+        "direct": false
+      },
+      {
+        "name": "@next/eslint-plugin-next",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "braces",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "drizzle-kit",
+        "severity": "moderate",
+        "direct": true
+      },
+      {
+        "name": "esbuild",
+        "severity": "moderate",
+        "direct": false
+      },
+      {
+        "name": "eslint-config-next",
+        "severity": "high",
+        "direct": true
+      },
+      {
+        "name": "fast-glob",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "image-size",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "micromatch",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "miniflare",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "react-server-dom-webpack",
+        "severity": "high",
+        "direct": true
+      },
+      {
+        "name": "sharp",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "undici",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "vinext",
+        "severity": "high",
+        "direct": true
+      },
+      {
+        "name": "vite",
+        "severity": "high",
+        "direct": true
+      },
+      {
+        "name": "vite-plugin-commonjs",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "vite-plugin-dynamic-import",
+        "severity": "high",
+        "direct": false
+      },
+      {
+        "name": "wrangler",
+        "severity": "high",
+        "direct": true
+      },
+      {
+        "name": "ws",
+        "severity": "high",
+        "direct": false
+      }
+    ]
+  },
+  "rootProduction": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "renderProduction": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  }
+}

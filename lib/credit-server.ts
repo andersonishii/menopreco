@@ -1,22 +1,23 @@
-import {createHmac,randomUUID,timingSafeEqual} from 'node:crypto';
+import {createHash,createHmac,randomUUID,timingSafeEqual} from 'node:crypto';
 const url=()=>process.env.NEXT_PUBLIC_SUPABASE_URL;
 const pub=()=>process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const secret=()=>process.env.SUPABASE_SECRET_KEY;
 export class AccessError extends Error{status:number;code?:string;constructor(message:string,status=403,code?:string){super(message);this.status=status;this.code=code}}
 function configured(){if(!url()||!pub()||!secret())throw new AccessError('O cadastro e os créditos ainda não foram configurados no servidor.',503)}
 export function sign(value:object){configured();const data=Buffer.from(JSON.stringify(value)).toString('base64url');return data+'.'+createHmac('sha256',secret()!).update(data).digest('base64url')}
-export function verify(value:string):any{try{const [data,mac]=value.split('.');const expected=createHmac('sha256',secret()!).update(data).digest();const supplied=Buffer.from(mac,'base64url');if(expected.length!==supplied.length||!timingSafeEqual(expected,supplied))return null;return JSON.parse(Buffer.from(data,'base64url').toString())}catch{return null}}
+export function verify(value:string):any{try{if(typeof value!=='string'||value.length>16000)return null;const [data,mac,...rest]=value.split('.');if(!data||!mac||rest.length)return null;const expected=createHmac('sha256',secret()!).update(data).digest();const supplied=Buffer.from(mac,'base64url');if(expected.length!==supplied.length||!timingSafeEqual(expected,supplied))return null;return JSON.parse(Buffer.from(data,'base64url').toString())}catch{return null}}
 export function cookies(request:Request){return Object.fromEntries((request.headers.get('cookie')||'').split(';').map(c=>{const i=c.indexOf('=');return[c.slice(0,i).trim(),c.slice(i+1)]}))}
 export function cookie(name:string,value:string,maxAge=31536000){return `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${process.env.NODE_ENV==='production'?'; Secure':''}`}
 export async function db(path:string,init:RequestInit={}){configured();const r=await fetch(url()+'/rest/v1/'+path,{...init,headers:{apikey:secret()!,...(secret()!.startsWith('sb_secret_')?{}:{Authorization:'Bearer '+secret()}),'Content-Type':'application/json',...init.headers},cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw new AccessError('Não foi possível acessar os créditos. Verifique a configuração do banco.',503);const text=await r.text();return text?JSON.parse(text):null}
 export async function identity(request:Request){configured();const c=cookies(request);if(c.pp_auth){const r=await fetch(url()+'/auth/v1/user',{headers:{apikey:pub()!,Authorization:'Bearer '+c.pp_auth},cache:'no-store',signal:AbortSignal.timeout(10000)});if(!r.ok)throw new AccessError('Sua sessão expirou. Entre novamente.',401);const user=await r.json();if(!user.email_confirmed_at)throw new AccessError('Confirme seu e-mail para liberar as consultas.',401);return{id:'user:'+user.id,userId:user.id,email:user.email,guestCookie:null};}const guest=verify(c.pp_guest||'');const id=guest?.id&&/^guest:[0-9a-f-]{36}$/.test(guest.id)?guest.id:'guest:'+randomUUID();return{id,userId:null,email:null,guestCookie:guest?null:cookie('pp_guest',sign({id}))}}
 export function scope(params:URLSearchParams){const local=params.get('local');if(!local||! /^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(local))throw new AccessError('Selecione uma cidade válida.',400);const uf=params.get('uf');let region=local;if(uf&&uf!=='PR'){const lat=params.get('latitude'),lon=params.get('longitude');if(!/^[A-Z]{2}$/.test(uf)||lat===null||lon===null||lat.trim()===''||lon.trim()===''||!Number.isFinite(Number(lat))||!Number.isFinite(Number(lon))||Math.abs(Number(lat))>90||Math.abs(Number(lon))>180)throw new AccessError('Localização inválida.',400);region+=`|uf:${uf}|lat:${Number(lat)}|lon:${Number(lon)}`;}const fuel=params.get('tp_comb'),gtin=params.get('gtin'),term=params.get('termo')?.trim();if(fuel&&['1','2','3','4','5'].includes(fuel))return `${region}|fuel:${fuel}`;if(gtin&&/^(\d{8}|\d{12,14})$/.test(gtin))return `${region}|gtin:${gtin}`;if(term&&term.length<=120)return `${region}|term:${term}`;throw new AccessError('Consulta inválida.',400)}
-export async function requireSearch(request:Request){const account=await identity(request);if(!account.userId)throw new AccessError('Cadastre-se ou entre para consultar os preços.',401);const grant=verify(request.headers.get('x-search-grant')||'');if(!grant||grant.account!==account.id||grant.scope!==scope(new URL(request.url).searchParams)||grant.exp<Date.now())throw new AccessError('Inicie uma nova consulta para acessar os preços.',403);return account;}
+export async function requireSearch(request:Request){const account=await identity(request);if(!account.userId)throw new AccessError('Cadastre-se ou entre para consultar os preços.',401);const grant=verify(request.headers.get('x-search-grant')||'');if(!grant||grant.account!==account.id||grant.scope!==scope(new URL(request.url).searchParams)||!Number.isFinite(grant.exp)||grant.exp<Date.now())throw new AccessError('Inicie uma nova consulta para acessar os preços.',403);rateLimit('search:'+account.userId,30,60000);return account;}
 export function fail(error:unknown){const e=error instanceof AccessError?error:new AccessError('Não foi possível concluir a operação. Tente novamente.',500);return Response.json({error:e.message,...(e.code?{code:e.code}:{})},{status:e.status,headers:{'Cache-Control':'no-store'}})}
 export function sameOrigin(request:Request){
  const normalize=(value:string|null|undefined)=>{try{const parsed=new URL(value||'');return ['http:','https:'].includes(parsed.protocol)?parsed.origin:null;}catch{return null;}};
  const origin=normalize(request.headers.get('origin'));
  // APP_URL is the public origin; request.url can be internal behind Render's proxy.
+ if(process.env.NODE_ENV==='production'&&(!process.env.APP_URL||!process.env.APP_URL.startsWith('https://')))throw new AccessError('Configure APP_URL com o endereço HTTPS de produção.',503);
  const allowed=normalize(process.env.APP_URL)||new URL(request.url).origin;
  if(!origin||origin!==allowed)throw new AccessError('Origem inválida.',403);
 }
@@ -40,3 +41,20 @@ export async function auth(path:string,body:object){configured();const r=await f
 export async function resetPassword(token:string,password:string){configured();const response=await fetch(url()+'/auth/v1/user',{method:'PUT',headers:{apikey:pub()!,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password}),signal:AbortSignal.timeout(15000)});if(!response.ok)throw new AccessError('Não foi possível redefinir a senha. Solicite um novo link e escolha uma senha forte.',400);}
 
 export async function confirmEmail(token:string){configured();const response=await fetch(url()+'/auth/v1/user',{headers:{apikey:pub()!,Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000)});if(!response.ok)throw new AccessError('Não foi possível validar a confirmação. Tente entrar com seu e-mail e senha.',400);const user=await response.json();if(!user.email_confirmed_at)throw new AccessError('Sua conta ainda precisa da confirmação do e-mail.',400);return {email:user.email};}
+
+const requestLimits=new Map<string,{until:number;count:number}>();
+export function rateLimit(key:string,maximum:number,period:number){
+ const now=Date.now(),hashed=createHash('sha256').update(key).digest('hex');let bucket=requestLimits.get(hashed);
+ if(!bucket||bucket.until<=now){if(requestLimits.size>=10000){for(const [k,v] of requestLimits)if(v.until<=now)requestLimits.delete(k);if(requestLimits.size>=10000)throw new AccessError('Muitas solicitações. Tente novamente mais tarde.',429);}bucket={until:now+period,count:0};requestLimits.set(hashed,bucket);}
+ if(++bucket.count>maximum)throw new AccessError('Muitas solicitações. Aguarde antes de tentar novamente.',429);
+}
+export function requestLimit(request:Request,bucket:string,maximum:number,period=60000){
+ const forwarded=request.headers.get('x-forwarded-for')?.split(',').at(-1)?.trim()||'unknown';rateLimit(bucket+':'+forwarded,maximum,period);
+}
+export async function readJson(request:Request,maximum=32768){
+ const length=Number(request.headers.get('content-length'));if(length>maximum)throw new AccessError('Solicitação muito grande.',413);
+ if(!request.body)throw new AccessError('Solicitação inválida.',400);const reader=request.body.getReader(),chunks:Uint8Array[]=[];let total=0;
+ try{while(true){const {value,done}=await reader.read();if(done)break;total+=value.byteLength;if(total>maximum){await reader.cancel();throw new AccessError('Solicitação muito grande.',413);}chunks.push(value);}}
+ finally{reader.releaseLock();}
+ try{const value=JSON.parse(Buffer.concat(chunks).toString('utf8'));if(!value||typeof value!=='object'||Array.isArray(value))throw Error();return value;}catch{throw new AccessError('Solicitação inválida.',400);}
+}

@@ -3,7 +3,7 @@ import {stripTypeScriptTypes} from 'node:module';
 import assert from 'node:assert/strict';
 const page=fs.readFileSync('app/page.tsx','utf8');
 const encode=page.slice(page.indexOf('function locationGeohash'),page.indexOf('type Product=Offer;')).replace('latitude:number,longitude:number','latitude,longitude');
-const action=page.slice(page.indexOf(' function useMyLocation(){'),page.indexOf(' const [directOffers'));
+const action=page.slice(page.indexOf(' function useMyLocation(){'),page.indexOf(' const [expansionWarning'));
 let success,failure,selected,message,error,cityBusy=false,manualRequests=0;
 const run=new Function('navigator','fetch','selectCity','setCityBusy','setLocating','setCityError','setLocationMessage','busy','cityBusy',stripTypeScriptTypes(encode)+'function setNeedsManualCity(){}function requestManualCity(){setLocating(\"manual\");}'+stripTypeScriptTypes(action)+';useMyLocation();');
 const setters=[value=>{selected=value;},value=>{cityBusy=value;},value=>{if(value==='manual')manualRequests++;},value=>{error=value;},value=>{message=value;}];

@@ -55,3 +55,5 @@ next-env.d.ts
 /render-app/next-env.d.ts
 /render-app/node_modules/
 /render-app/.next/
+
+/render-app/proxy.ts

@@ -1,1 +1,1 @@
-export default {turbopack:{root:process.cwd()}};
+export default {poweredByHeader:false,turbopack:{root:process.cwd()}};

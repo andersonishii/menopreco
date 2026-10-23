@@ -1,0 +1,130 @@
+[
+  {
+    "file": "verify-access.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-api.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-auth.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-barcode.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-brasil.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-browser-search.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-checkout.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-city.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-cpf.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-description-offers.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-discounts.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-fuel-recent.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-fuel.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-groups.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-local-order.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-location-edit.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-location.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-mpbr-auth.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-mpbr-extension.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-national-flow.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-offer-details.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-online-prices.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-payment.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-plans.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-product-image.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-production-security.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-radius.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-saved-results.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-search-defaults.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-serper.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-shopping-distance.mjs",
+    "passed": true
+  },
+  {
+    "file": "verify-unlimited.mjs",
+    "passed": true
+  }
+]

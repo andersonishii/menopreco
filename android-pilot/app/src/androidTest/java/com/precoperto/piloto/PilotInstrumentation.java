@@ -30,7 +30,7 @@ public final class PilotInstrumentation extends Instrumentation {
         try{
             MainActivity activity=(MainActivity)startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             SharedPreferences flow=getTargetContext().getSharedPreferences("pending-flow",0);
-            runOnMainSync(()->find(activity.getWindow().getDecorView(),"1. Testar retorno ao aplicativo").performClick());
+            runOnMainSync(()->find(activity.getWindow().getDecorView(),"Testar apenas retorno ao aplicativo").performClick());
             String id=flow.getString("request","");check(AuthLinks.validId(id),"App must create a random request");
             runOnMainSync(()->activity.onNewIntent(new Intent(Intent.ACTION_VIEW,Uri.parse("br.com.precoperto.app://oauth/test?request=wrong"))));
             check(flow.contains("request"),"Wrong callback must not finish flow");
@@ -40,8 +40,8 @@ public final class PilotInstrumentation extends Instrumentation {
             runOnMainSync(()->activity.onNewIntent(new Intent(Intent.ACTION_VIEW,Uri.parse("br.com.precoperto.app://oauth/test?request="+id))));
             check(!flow.contains("request"),"Replayed callback cannot restore flow");
             check(getTargetContext().getPackageManager().resolveActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(AuthLinks.CALLBACK+"?state=test")).setPackage(getTargetContext().getPackageName()),0)!=null,"Manifest must resolve own callback");
-            check(getTargetContext().getPackageManager().resolveActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("br.gov.rs.procergs.mpbr://oauth/auth?state=test")).setPackage(getTargetContext().getPackageName()),0)==null,"Must not register official app scheme");
-            runOnMainSync(()->find(activity.getWindow().getDecorView(),"Verificar conexão com gov.br").performClick());
+            check(getTargetContext().getPackageManager().resolveActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("br.gov.rs.procergs.mpbr://oauth/auth?state=test")).setPackage(getTargetContext().getPackageName()),0)!=null,"Experimental callback must resolve to pilot when selected");
+            runOnMainSync(()->find(activity.getWindow().getDecorView(),"Vincular à conta do site (outro fluxo)").performClick());
             check(flow.getString("mode","").equals("connect"),"Connect mode must be separate from diagnostic");
             flow.edit().clear().commit();
             results.putString("stream","PASS: launch, buttons, random attempt, wrong/replayed callback, own manifest scheme and separate login mode. Synthetic callbacks; no gov.br login.\n");

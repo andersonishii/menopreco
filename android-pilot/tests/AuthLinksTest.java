@@ -1,4 +1,5 @@
 import com.precoperto.piloto.AuthLinks;
+import com.precoperto.piloto.NativeLogin;
 import java.net.URI;
 public final class AuthLinksTest {
     static void check(boolean value) { if(!value)throw new AssertionError(); }
@@ -23,6 +24,24 @@ public final class AuthLinksTest {
         rejects(()->AuthLinks.path(AuthLinks.parse("br.gov.rs.procergs.mpbr://oauth/auth?state="+state)));
         rejects(()->AuthLinks.path(AuthLinks.parse("br.com.precoperto.app://oauth/unknown")));
         rejects(()->AuthLinks.params(URI.create(AuthLinks.CALLBACK+"?code=first&code=second")));
+        NativeLogin.Attempt first=NativeLogin.begin(1000),second=NativeLogin.begin(1000);
+        check(!first.state.equals(second.state));check(!first.verifier.equals(second.verifier));
+        java.util.Map<String,String> parameters=AuthLinks.params(URI.create(first.url));
+        check(parameters.get("client_id").equals(NativeLogin.CLIENT_ID));
+        check(parameters.get("redirect_uri").equals(NativeLogin.CALLBACK));
+        check(parameters.get("code_challenge").equals(NativeLogin.challenge(first.verifier)));
+        check(NativeLogin.challenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk").equals("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"));
+        String callback=NativeLogin.CALLBACK+"?code=fake-test-code&state="+first.state;
+        check(NativeLogin.code(callback,first.state,first.verifier,1000,2000).equals("fake-test-code"));
+        rejects(()->NativeLogin.code(callback,second.state,first.verifier,1000,2000));
+        rejects(()->NativeLogin.code(callback,first.state,first.verifier,1000,601000));
+        rejects(()->NativeLogin.code(callback,first.state,"invalid-verifier",1000,2000));
+        rejects(()->NativeLogin.code(callback+"&code=duplicate",first.state,first.verifier,1000,2000));
+        rejects(()->NativeLogin.code(callback+"&state=duplicate",first.state,first.verifier,1000,2000));
+        rejects(()->NativeLogin.code(callback.replace("fake-test-code","..."),first.state,first.verifier,1000,2000));
+        rejects(()->NativeLogin.code(callback.replace("br.gov.rs.procergs.mpbr","evil.app"),first.state,first.verifier,1000,2000));
+        rejects(()->NativeLogin.code(callback+"&error=access_denied",first.state,first.verifier,1000,2000));
+        System.out.println("PASS: standalone login generates independent PKCE, matches RFC 7636, validates state and consumes only complete current callbacks.");
         System.out.println("PASS: Android validates origin, own callback, PKCE, state, expiry and duplicate parameters.");
     }
 }

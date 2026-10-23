@@ -41,7 +41,7 @@ public final class PilotInstrumentation extends Instrumentation {
             check(!flow.contains("request"),"Replayed callback cannot restore flow");
             check(getTargetContext().getPackageManager().resolveActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(AuthLinks.CALLBACK+"?state=test")).setPackage(getTargetContext().getPackageName()),0)!=null,"Manifest must resolve own callback");
             check(getTargetContext().getPackageManager().resolveActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("br.gov.rs.procergs.mpbr://oauth/auth?state=test")).setPackage(getTargetContext().getPackageName()),0)==null,"Must not register official app scheme");
-            runOnMainSync(()->find(activity.getWindow().getDecorView(),"2. Conectar com gov.br").performClick());
+            runOnMainSync(()->find(activity.getWindow().getDecorView(),"Verificar conexão com gov.br").performClick());
             check(flow.getString("mode","").equals("connect"),"Connect mode must be separate from diagnostic");
             flow.edit().clear().commit();
             results.putString("stream","PASS: launch, buttons, random attempt, wrong/replayed callback, own manifest scheme and separate login mode. Synthetic callbacks; no gov.br login.\n");

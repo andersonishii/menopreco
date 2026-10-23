@@ -31,11 +31,11 @@ public final class MainActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(24),dp(40),dp(24),dp(32));
         content.setBackgroundColor(Color.rgb(245,248,242));scroll.addView(content);setContentView(scroll);
         text(content,"preço perto",32,true);
-        text(content,"ANDROID · PILOTO 0.1.0",12,true);
-        text(content,"Seu teste começa aqui",26,true);
-        text(content,"Primeiro, teste a volta do navegador ao aplicativo. A conexão real com o gov.br depende da autorização do retorno para o Preço Perto.",16,false);
+        text(content,"ANDROID · PILOTO 0.1.1",12,true);
+        text(content,"Protótipo de conexão",26,true);
+        text(content,"O teste abaixo verifica a volta ao aplicativo. O login real do gov.br ainda depende da autorização do retorno para o Preço Perto; sem essa liberação, a tela de CPF e senha não será aberta.",16,false);
         button(content,"1. Testar retorno ao aplicativo",view -> begin("test"));
-        button(content,"2. Conectar com gov.br",view -> begin("connect"));
+        button(content,"Verificar conexão com gov.br",view -> begin("connect"));
         button(content,"Abrir Preço Perto",view -> open(AuthLinks.SITE));
         status = text(content,"Aguardando um teste. Nenhuma conexão foi iniciada.",16,true);
         text(content,"O login ocorre no navegador do celular. Este piloto não acessa o console, não lê sua senha e não guarda tokens de acesso no aparelho.",14,false);
@@ -55,7 +55,7 @@ public final class MainActivity extends Activity {
         byte[] bytes = new byte[32];new SecureRandom().nextBytes(bytes);
         String request = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         flow.edit().clear().putString("request",request).putString("mode",mode).putString("phase","begin").putLong("issued",System.currentTimeMillis()).apply();
-        status.setText(mode.equals("test") ? "No navegador, toque em Voltar ao aplicativo e concluir teste." : "Continue no navegador. Se solicitado, entre primeiro na sua conta do Preço Perto.");
+        status.setText(mode.equals("test") ? "No navegador, toque em Voltar ao aplicativo e concluir teste." : "Verifique no navegador: a conta do Preço Perto e a conexão gov.br são etapas diferentes.");
         open(AuthLinks.SITE+"/android?mode="+mode+"&request="+request);
     }
     private void open(String value) {

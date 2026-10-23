@@ -1,4 +1,4 @@
-# Preço Perto — piloto Android 0.1.0
+# Preço Perto — piloto Android 0.1.1
 
 APK de teste para validar navegador → aplicativo, antes de desenvolver o aplicativo completo. Android 8.0 ou superior. O piloto possui uma tela nativa; as pesquisas abrem o site no navegador. Ele não incorpora o gov.br em WebView e não tenta ler o console.
 
@@ -14,7 +14,7 @@ Após o deploy, o APK também estará em `/preco-perto-piloto.apk`. O SHA-256 co
 
 ## Conexão real: dependência externa pendente
 
-O botão **2. Conectar com gov.br** abre a página de conexão no navegador. Por padrão ela informa que o retorno ainda não está autorizado. Não é um erro do APK.
+O botão **Verificar conexão com gov.br** abre a página de conexão no navegador. Por padrão ela informa que o retorno ainda não está autorizado. Não é um erro do APK.
 
 O fluxo existente usa o cliente e o retorno do aplicativo oficial MPBR. Este piloto **não registra o esquema do aplicativo oficial** e não intercepta seu login. O provedor precisa autorizar um cliente/retorno para o Preço Perto e confirmar sua compatibilidade com os endpoints MPBR `Login/token`, `Login/refresh_token` e consultas. Cadastrar um cliente gov.br próprio, isoladamente, não garante acesso ao MPBR.
 
@@ -36,7 +36,7 @@ Não definir a segunda variável para contornar a autorização. Nenhuma dessas 
 O fluxo preparado é:
 
 1. O APK cria um identificador aleatório válido por 10 minutos e abre `/android?mode=connect&request=…` no navegador.
-2. O usuário entra na sua conta **Preço Perto** nesse navegador. Se necessário, volta ao APK e inicia a conexão novamente.
+2. Se faltar a sessão, a página mostra o formulário para entrar na conta **Preço Perto**. Após entrar, ela verifica automaticamente a disponibilidade da conexão gov.br. Não é necessário voltar ao APK para repetir a etapa.
 3. A página chama `begin_android`. O servidor cria PKCE/state e guarda a tentativa num cookie HttpOnly criptografado, vinculado à conta. O app não recebe o verificador PKCE.
 4. O usuário confirma a abertura do aplicativo. O APK valida a tentativa, o endereço oficial e o retorno próprio, e abre o gov.br no navegador do sistema.
 5. O retorno abre o APK. Ele valida state, prazo e fase da tentativa, e encaminha o código para a página de conclusão no **fragmento** da URL. O código não é colocado em query HTTP, logs do servidor ou armazenamento do app.
@@ -75,3 +75,5 @@ adb -s <emulador-de-teste> shell am instrument -w com.precoperto.piloto.test/com
 ```
 
 Referências: [retorno e autenticação gov.br](https://acesso.gov.br/roteiro-tecnico/iniciarintegracao.html), [deep links Android](https://developer.android.com/training/app-links/deep-linking).
+
+Versão 0.1.1: botão de conexão renomeado, pendência do login real explícita e formulário do Preço Perto na própria página Android quando faltar a sessão.

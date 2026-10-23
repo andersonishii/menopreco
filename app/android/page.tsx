@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from 'react';
 import styles from './pilot.module.css';
+import AccountPanel from '../../components/account-panel';
 
 export default function AndroidPilot(){
  const started=useRef(false);
@@ -29,9 +30,18 @@ export default function AndroidPilot(){
    setMessage('Este teste verifica apenas se o navegador consegue voltar ao aplicativo. Ele não faz login no gov.br e não gera uma autorização.');
    setAppLink('br.com.precoperto.app://oauth/test?'+new URLSearchParams({request:id}));return;
   }
-  setMessage('O login será feito no navegador, na página oficial do gov.br. O retorno precisa estar autorizado para este aplicativo.');
-  void fetch('/api/brasil/conexao',{cache:'no-store'}).then(async response=>{const data=await response.json();if(response.status===401){setLogin(true);return;}if(!response.ok)throw Error(data.error);setAvailable(!!data.androidAvailable);if(!data.androidAvailable)setMessage('O retorno do gov.br para este aplicativo ainda aguarda autorização e configuração no servidor. Você já pode testar o retorno pelo outro botão do APK.');}).catch(error=>setError(error.message));
+  void checkConnection();
  },[]);
+ async function checkConnection(){
+  setBusy(true);setError('');setMessage('Verificando sua conta do Preço Perto…');
+  try{
+   const response=await fetch('/api/brasil/conexao',{cache:'no-store'}),data=await response.json();
+   if(response.status===401){setLogin(true);setAvailable(false);setMessage('Primeiro, entre na sua conta do Preço Perto abaixo. Esta é a conta de e-mail e senha do site, não a conta gov.br.');return;}
+   if(!response.ok)throw Error(data.error||'Não foi possível verificar sua conta.');
+   setLogin(false);setAvailable(!!data.androidAvailable);
+   setMessage(data.androidAvailable?'Você já está conectado à conta do Preço Perto. Agora pode iniciar a conexão ao Menor Preço Brasil pelo gov.br.':'Você já está conectado à conta do Preço Perto. O login real do gov.br ainda não está disponível neste piloto: falta autorizar e configurar o retorno para o aplicativo. Por isso, a tela de CPF e senha do gov.br não será aberta.');
+  }catch(error){setError((error as Error).message);setMessage('Não foi possível verificar a conexão.');}finally{setBusy(false);}
+ }
  async function begin(){
   setBusy(true);setError('');try{
    const response=await fetch('/api/brasil/conexao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'begin_android',request})}),data=await response.json();
@@ -40,5 +50,5 @@ export default function AndroidPilot(){
    setAppLink(link.toString());setMessage('Tudo pronto. Toque abaixo para abrir o gov.br no navegador e voltar automaticamente ao aplicativo após o login.');
   }catch(error){setError((error as Error).message);}finally{setBusy(false);}
  }
- return <main className={styles.page}><a href="/" className={styles.brand}>preço perto</a><section className={styles.card} aria-busy={busy}><span className={styles.badge}>ANDROID · PILOTO</span><h1>{mode==='test'?'Vamos testar o retorno?':mode==='complete'?'Conexão ao Menor Preço Brasil':'Conecte sua conta pelo celular'}</h1><p role="status">{message}</p>{error&&<p className={styles.error} role="alert">{error}</p>}{login&&<><p>Entre primeiro na sua conta do Preço Perto neste navegador. Depois, volte ao aplicativo e toque em “Conectar com gov.br” novamente.</p><a className={styles.button} href="/">Entrar no Preço Perto</a></>}{mode==='connect'&&available&&!appLink&&<button className={styles.button} disabled={busy} onClick={()=>void begin()}>{busy?'Preparando…':'Preparar conexão com gov.br'}</button>}{appLink&&<a className={styles.button} href={appLink}>{mode==='test'?'Voltar ao aplicativo e concluir teste':mode==='complete'?'Voltar ao aplicativo':'Abrir gov.br pelo aplicativo'}</a>}<a className={styles.secondary} href="/">Ir para as pesquisas</a><small>Seu CPF e sua senha são informados somente no gov.br. O aplicativo não lê campos de senha nem o console do navegador.</small></section></main>;
+ return <main className={styles.page}><a href="/" className={styles.brand}>preço perto</a><section className={styles.card} aria-busy={busy}><span className={styles.badge}>ANDROID · PILOTO 0.1.1</span><h1>{mode==='test'?'Vamos testar o retorno?':mode==='complete'?'Conexão ao Menor Preço Brasil':login?'1. Entre no Preço Perto':'Conexão com gov.br'}</h1><p role="status">{message}</p>{error&&<p className={styles.error} role="alert">{error}</p>}{login&&<div className={styles.loginForm}><AccountPanel startWithLogin onAccess={value=>{if(value)void checkConnection();}}/><p>Depois de entrar, esta página verifica automaticamente se a conexão gov.br está disponível. Você não precisa voltar ao APK para repetir esta etapa.</p></div>}{mode==='connect'&&!login&&!available&&!busy&&!error&&<div className={styles.pending}><strong>Conexão gov.br ainda não habilitada</strong><p>O botão de teste do APK verifica apenas a volta do navegador ao aplicativo. Ele não faz login no gov.br e não obtém token.</p></div>}{mode==='connect'&&available&&!appLink&&<button className={styles.button} disabled={busy} onClick={()=>void begin()}>{busy?'Preparando…':'Preparar conexão com gov.br'}</button>}{appLink&&<a className={styles.button} href={appLink}>{mode==='test'?'Voltar ao aplicativo e concluir teste':mode==='complete'?'Voltar ao aplicativo':'Abrir gov.br pelo aplicativo'}</a>}<a className={styles.secondary} href="/">Ir para as pesquisas</a><small>Use aqui apenas o e-mail e a senha do Preço Perto. O CPF e a senha do gov.br só serão solicitados na página oficial do gov.br quando essa integração estiver habilitada.</small></section></main>;
 }

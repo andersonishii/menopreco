@@ -4,11 +4,11 @@ import {clearPrivateBrowserData} from '../lib/saved-results';
 import PixCheckout from './pix-checkout';
 import {clearGrants} from '../lib/credit-client';
 type Account={email:string|null;remaining:number;freeGranted:boolean;unlimitedAccess:boolean};
-export default function AccountPanel({onAccess,onAccount}:{onAccess:(value:boolean)=>void;onAccount?:(email:string|null)=>void}){
+export default function AccountPanel({onAccess,onAccount,startWithLogin=false}:{onAccess:(value:boolean)=>void;onAccount?:(email:string|null)=>void;startWithLogin?:boolean}){
  const [messageError,setMessageError]=useState(false);
  const [confirmationEmail,setConfirmationEmail]=useState('');
  const [showPassword,setShowPassword]=useState(false);
- const [account,setAccount]=useState<Account|null>(null),[signup,setSignup]=useState(true),[forgot,setForgot]=useState(false),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[recoveryToken,setRecoveryToken]=useState(''),[message,setMessage]=useState(''),[resetSuccess,setResetSuccess]=useState(false),[busy,setBusy]=useState(false),[open,setOpen]=useState(false),[pixOpen,setPixOpen]=useState(false),[pixAttempt,setPixAttempt]=useState(0),[paymentId,setPaymentId]=useState('');
+ const [account,setAccount]=useState<Account|null>(null),[signup,setSignup]=useState(!startWithLogin),[forgot,setForgot]=useState(false),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[recoveryToken,setRecoveryToken]=useState(''),[message,setMessage]=useState(''),[resetSuccess,setResetSuccess]=useState(false),[busy,setBusy]=useState(false),[open,setOpen]=useState(false),[pixOpen,setPixOpen]=useState(false),[pixAttempt,setPixAttempt]=useState(0),[paymentId,setPaymentId]=useState('');
  useEffect(()=>{const login=()=>{setSignup(false);setForgot(false);setOpen(true);requestAnimationFrame(()=>document.getElementById('account-email')?.focus({preventScroll:true}));};window.addEventListener('account-login',login);return()=>window.removeEventListener('account-login',login);},[]);
  useEffect(()=>{setShowPassword(false);setMessageError(false);},[signup,forgot,recoveryToken]);
  async function refresh(){try{const r=await fetch('/api/account');const data=await r.json();if(!r.ok){setMessage(data.error);setAccount(null);onAccount?.(null);onAccess(false);}else{setAccount(data);onAccount?.(data.email||null);onAccess(Boolean(data.email));if(!data.email||(!data.unlimitedAccess&&data.remaining===0))setOpen(true);}}catch{setMessage('Não foi possível consultar sua conta.');onAccess(false);}}

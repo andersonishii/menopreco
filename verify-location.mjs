@@ -16,8 +16,8 @@ await success({coords:{latitude:-25.0891685,longitude:-50.1601812,accuracy:10}})
 assert.equal(selected.name,'Ponta Grossa / PR');assert.equal(selected.geohash,'6gs368dmp');assert.equal(cityBusy,false);assert.match(message,/identificada/);
 run(navigator,async()=>{throw Error();},...setters,false,false);
 await success({coords:{latitude:-25.0891685,longitude:-50.1601812,accuracy:10}});
-assert.match(error,/verificar o estado/);
-run(navigator,async()=>{},...setters,false,false);failure({code:1});assert.match(error,/não autorizou/);assert.equal(cityBusy,false);
+assert.match(error,/Parece que sua localização ainda não está disponível/);
+run(navigator,async()=>{},...setters,false,false);failure({code:1});assert.match(error,/selecionar manualmente um estado e uma cidade/);assert.equal(cityBusy,false);
 console.log('Localização: cidade identificada, geohash preservado, falha de serviço e permissão negada conferidos.');
 
 assert.equal(manualRequests,2);

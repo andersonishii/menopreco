@@ -17,9 +17,15 @@ for(const handler of [categories,products]){
  const offer={id:'sample',gtin:'7891234567895',desc:'Arroz',valor_tabela:'5.00'};
  mock(()=>{upstreamCalls++;assert.equal(called.searchParams.has('gtin'),false);return Response.json({produtos:[offer]});});
  const response=await handler(request('https://site.example/api/'+(handler===categories?'categorias':'produtos')+'?local=6gkzq99z5j5f&termo=arroz&categoria=6&expand=1'));
- assert.equal(response.status,200);assert.deepEqual((await response.json()).produtos,[offer]);assert.equal(upstreamCalls,1);
+ if(handler===categories){assert.equal(response.status,502);assert.match((await response.json()).error,/Tente novamente/);}else{assert.equal(response.status,200);assert.deepEqual((await response.json()).produtos,[offer]);}assert.equal(upstreamCalls,1);
 }
 mock(()=>Response.json({produtos:[]}));
 assert.equal((await products(request('https://site.example/api/produtos?local=6gkzq99z5j5f&gtin=7891234567895'))).status,200);
 assert.equal(called.searchParams.get('gtin'),'7891234567895');
 console.log('PASS: descrição no Paraná não expande GTIN; consulta direta por código de barras preservada.');
+
+for(const payload of [{categorias:[]},{produtos:[]},{unexpected:true}]){
+ mock(()=>Response.json(payload));const response=await categories(request('https://site.example/api/categorias?local=6gkzq99z5j5f&termo=arroz'));
+ assert.equal(response.status,502);assert.match((await response.json()).error,/Tente novamente/);
+}
+console.log('PASS: categorias ausentes ou vazias pedem nova tentativa, sem aceitar produtos como alternativa.');

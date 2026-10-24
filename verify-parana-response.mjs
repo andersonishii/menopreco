@@ -9,8 +9,8 @@ const {GET}=await import('./app/api/produtos/route.ts');const {GET:categories}=a
 const {sign,scope}=await import('./lib/credit-server.ts');
 const local='6gkzquw8e',agent='Mozilla/5.0 Firefox/158.0';
 const request=url=>new Request(url,{headers:{'user-agent':agent,cookie:'pp_auth=test','x-search-grant':sign({account:'user:test',scope:scope(new URL(url).searchParams),exp:Date.now()+30000})}});
-assert.deepEqual(paranaHeaders(request('https://site.example/api/produtos?local='+local+'&gtin=80853671')),{Accept:'application/json','User-Agent':agent});
-assert.deepEqual(paranaHeaders(new Request('https://site.example')),{Accept:'application/json'});
+assert.deepEqual(paranaHeaders(request('https://site.example/api/produtos?local='+local+'&gtin=80853671')),{Accept:'application/json, text/plain, */*','User-Agent':agent});
+assert.deepEqual(paranaHeaders(new Request('https://site.example')),{Accept:'application/json, text/plain, */*'});
 const offer={id:'real',gtin:'80853671',desc:'GOMA MENTOS 92G WINT',datahora:'2026-01-01T12:00:00Z',valor:'22.59',valor_tabela:'22.59',estabelecimento:{nm_emp:'Mercado',nm_logr:'Rua A',nr_logr:'100',mun:'Curitiba',uf:'PR'}};
 assert.doesNotThrow(()=>assertParanaProducts({local,produtos:[offer]},local,'80853671'));
 assert.doesNotThrow(()=>assertParanaProducts({local:'',produtos:[],total:0},local,'80853671'));

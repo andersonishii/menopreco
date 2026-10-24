@@ -1,7 +1,7 @@
 import {normalizedGtin} from './description-offers';
 export class ParanaResponseError extends Error{code='PARANA_RESPONSE_INCONSISTENT';}
 export function paranaHeaders(request:Request):HeadersInit{
- const headers:Record<string,string>={Accept:'application/json'};
+ const headers:Record<string,string>={Accept:'application/json, text/plain, */*'};
  const agent=request.headers.get('user-agent');
  // Forward the actual caller's browser identity. Never forward cookies, grants or authorization.
  if(agent&&agent.length<=1024)headers['User-Agent']=agent;
@@ -48,4 +48,16 @@ export function restoredParanaOffset(saved:{paginationVersion?:unknown;lastLoade
  if(!hasResults)return 0;
  const last=saved.lastLoadedOffset;
  return saved.paginationVersion===1&&typeof last==='number'&&Number.isSafeInteger(last)&&last>=0&&last%50===0?last+50:50;
+}
+
+// Recent-day selection is applied locally; fetch its candidate page by price,
+// matching the official application's initial product query.
+export function paranaRequestOrder(order:string){return order==='recent-day'||order==='discount'?'0':order;}
+
+export function paranaProductsUrl(query:URLSearchParams){
+ const params=new URLSearchParams();
+ for(const name of ['local','termo','categoria','offset','raio','data','gtin','tp_comb','valor_min','valor_max','ordem']){
+  const value=query.get(name);if(value!==null)params.set(name,value);
+ }
+ return 'https://menorpreco.notaparana.pr.gov.br/api/v1/produtos?'+params;
 }

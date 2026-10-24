@@ -60,3 +60,10 @@ Na busca por descrição do Paraná, a primeira página após a categoria não e
 ## Indisponibilidade e retomada da paginação
 
 Respostas 429/503 e erros 500 com `es_rejected_execution_exception` são tratados como sobrecarga temporária do Nota Paraná. O site retorna uma mensagem legível (503, `PARANA_UPSTREAM_BUSY`, Retry-After de 10 segundos) sem repetir imediatamente a consulta por outro caminho. A tentativa manual usa a mesma página e o crédito existente. Ofertas já carregadas permanecem na tela. O cache agora guarda uma versão da paginação e o offset da última página concluída. Caches antigos sem esse marcador retomam em 50, preservando as ofertas existentes e deduplicando eventuais repetições. Caches novos retomam exatamente após a última página confirmada. Uma falha não avança esse marcador. Essa proteção não elimina a indisponibilidade da API externa.
+
+
+## Formato da consulta oficial
+
+Na busca padrão por descrição no Paraná, a consulta de produtos usa `local`, `termo`, `categoria`, `offset=0`, `raio`, `data=3` e `ordem=0`, sem limites de preço na primeira página. A opção visual de menor preço do dia continua aplicada localmente. Seleções explícitas de distância, data da venda ou maior preço preservam os códigos oficiais 1, 2 e 3. As próximas páginas mantêm a ordem da consulta original. Consultas já salvas mantêm sua ordem anterior até uma nova busca, evitando misturar páginas ordenadas por critérios diferentes.
+
+A URL é montada da mesma forma no servidor e no navegador. O Accept dos produtos é `application/json, text/plain, */*`. Cabeçalhos de origem do navegador não são forjados: a chamada do Preço Perto continua tendo origem diferente da aplicação oficial. Localização e raio são os valores escolhidos pelo usuário. O teste automatizado compara literalmente a URL com o exemplo oficial fornecido para feminino/categoria 37/local 6gkzqf9vb/raio 7.

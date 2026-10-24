@@ -1,12 +1,11 @@
 "use client";
-import {assertParanaProducts,paranaOffset,paranaBusyResponse} from './parana-response';
+import {assertParanaProducts,paranaOffset,paranaBusyResponse,paranaProductsUrl} from './parana-response';
 import {latestStoreOffers} from './latest-offers';
 const grants=new Map<string,string>();
 let queue:Promise<unknown>=Promise.resolve();
 const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'|uf:'+p.get('uf')+'|lat:'+Number(p.get('latitude'))+'|lon:'+Number(p.get('longitude')):p.get('local'),p.get('tp_comb')?'fuel:'+p.get('tp_comb'):p.get('gtin')?'gtin:'+p.get('gtin'):'term:'+p.get('termo')?.trim()].join('|');
 async function directParanaProducts(target:URL):Promise<Response|undefined>{
- const upstream=new URL('https://menorpreco.notaparana.pr.gov.br/api/v1/produtos');upstream.search=target.search;upstream.searchParams.delete('expand');
- const response=await fetch(upstream.toString(),{headers:{Accept:'application/json'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(12000)});
+ const response=await fetch(paranaProductsUrl(target.searchParams),{headers:{Accept:'application/json, text/plain, */*'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(12000)});
  if(!response.ok)return (await paranaBusyResponse(response))||undefined;
  const data=await response.json();assertParanaProducts(data,target.searchParams.get('local')||'',target.searchParams.get('gtin'));
  // Browser prices are not submitted to the shared price history.

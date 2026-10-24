@@ -1,4 +1,4 @@
-import {paranaHeaders,assertParanaProducts,ParanaResponseError,paranaPriceRange,paranaOffset,paranaBusyResponse} from '../../../lib/parana-response';
+import {paranaHeaders,assertParanaProducts,ParanaResponseError,paranaPriceRange,paranaOffset,paranaBusyResponse,paranaProductsUrl} from '../../../lib/parana-response';
 import {withPriceHistory} from '../../../lib/price-history-server';
 import {requireSearch,fail} from '../../../lib/credit-server';
 export async function GET(request:Request){
@@ -20,7 +20,7 @@ export async function GET(request:Request){
  try{await requireSearch(request);}catch(e){return fail(e);}
  let stage='upstream',upstreamStatus:number|undefined;
  try{
-  const response=await fetch('https://menorpreco.notaparana.pr.gov.br/api/v1/produtos?'+params,{headers:paranaHeaders(request),cache:'no-store',signal:AbortSignal.timeout(20000)});
+  const response=await fetch(paranaProductsUrl(params),{headers:paranaHeaders(request),cache:'no-store',signal:AbortSignal.timeout(20000)});
   upstreamStatus=response.status;if(!response.ok){const busy=await paranaBusyResponse(response);if(busy)return busy;throw new Error();}
   stage='response';const data=await response.json();assertParanaProducts(data,local,gtin);
   stage='history';const produtos=await withPriceHistory(data.produtos,'PR');

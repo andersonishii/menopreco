@@ -25,7 +25,7 @@ let recorded;
 globalThis.fetch=async(url,init)=>{recorded=JSON.parse(init.body).observations;return Response.json(recorded.map(row=>({observation_key:row.observation_key,points:row.observation_key===observation(current,'PR').observation_key?[{price:5,recordedAt:old.datahora,discount:0}]:[],has_newer:row.observation_key===observation(old,'PR').observation_key})));};
 const shown=await withPriceHistory([old,current],'PR');assert.equal(recorded.length,2);assert.equal(shown.length,1);assert.equal(shown[0].id,'current');assert.equal(shown[0].priceHistory.points[0].price,5);
 globalThis.fetch=async()=>{throw Error('offline');};assert.deepEqual((await withPriceHistory([old,current],'PR')).map(x=>x.id),['current']);
-const {GET}=await import('./app/api/produtos/route.ts');const {sign,scope}=await import('./lib/credit-server.ts');
+const {paranaFetch:GET}=await import('./lib/parana-browser.ts');const {sign,scope}=await import('./lib/credit-server.ts');
 globalThis.fetch=async(url,init)=>{const address=String(url.url||url);if(address.includes('/auth/v1/user'))return Response.json({id:'test',email_confirmed_at:'2026-01-01'});if(address.includes('/rpc/record_price_observations'))return Response.json(JSON.parse(init.body).observations.map(row=>({observation_key:row.observation_key,points:[],has_newer:false})));return Response.json({produtos:[old,current],total:2});};
 const url='https://site.example/api/produtos?local=6gkzq99z5j5f&gtin=7891234567895&offset=50';
 const response=await GET(new Request(url,{headers:{cookie:'pp_auth=test','x-search-grant':sign({account:'user:test',scope:scope(new URL(url).searchParams),exp:Date.now()+10000})}}));

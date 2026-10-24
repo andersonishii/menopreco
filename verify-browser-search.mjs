@@ -3,71 +3,31 @@ import {registerHooks} from 'node:module';
 registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
 globalThis.location={origin:'https://site.example'};globalThis.window=new EventTarget();
 const {creditFetch,clearGrants}=await import('./lib/credit-client.ts');
-for(const blocked of [false,true]){
- clearGrants();let credits=0,server=0;
- globalThis.fetch=async(url,init)=>{
-  if(url==='/api/credits'){credits++;return Response.json({grant:'private-grant'})}
-  if(String(url).startsWith('https://menorpreco.')){assert.equal(init.credentials,'omit');assert.equal(init.headers['x-search-grant'],undefined);assert.equal(new URL(url).searchParams.get('local'),'6gf0ffq61');if(blocked)throw new TypeError('Failed to fetch');return Response.json({categorias:[]})}
-  server++;assert.equal(init.headers['x-search-grant'],'private-grant');return Response.json({categorias:[]});
- };
- assert.equal((await creditFetch('/api/categorias?local=6gf0ffq61&termo=arroz&raio=20')).status,200);
- assert.equal(credits,1);assert.equal(server,blocked?1:0);
-}
-clearGrants();globalThis.fetch=async url=>{assert.equal(url,'/api/credits');return Response.json({error:'Sem saldo'},{status:402})};
-await assert.rejects(()=>creditFetch('/api/categorias?local=6gf0ffq61&termo=arroz&raio=20'),/Sem saldo/);
-console.log('OK: navegador primeiro, CORS usa servidor sem outro crédito, nenhum grant externo, saldo obrigatório.');
-
-clearGrants();let expansionCredits=0,expansionRequests=0;globalThis.fetch=async url=>{if(url==='/api/credits'){expansionCredits++;return Response.json({grant:'description-grant'});}assert.ok(String(url).startsWith('/api/produtos?'));expansionRequests++;return Response.json({produtos:[]});};
-await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&expand=1');await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&offset=20&expand=1');assert.equal(expansionCredits,1);assert.equal(expansionRequests,2);console.log('PASS: enriquecimento no servidor e paginação usam o mesmo crédito da descrição.');
-
-for(const scenario of ['barcode','description','invalid','offline','auth','processing','national']){
- clearGrants();let credits=0,directCalls=0;
- const local='6gkzquw8e',gtin='7898024394938';
- globalThis.fetch=async(url,init)=>{
-  if(url==='/api/credits'){credits++;return Response.json({grant:'private'});}
-  if(String(url).startsWith('https://menorpreco.')){
-   directCalls++;assert.equal(new URL(url).searchParams.get('data'),'3');assert.equal(new URL(url).searchParams.get('ordem'),'0');assert.equal(init.credentials,'omit');assert.deepEqual(init.headers,{Accept:'application/json, text/plain, */*'});
-   if(scenario==='offline')throw new TypeError('CORS');
-   return Response.json({local:scenario==='invalid'?'':local,produtos:[{gtin,desc:'Kinder',valor:'5.99'}]});
-  }
-  return Response.json({error:'Consulta indisponível',code:scenario==='processing'?'PARANA_PROCESSING_FAILED':'PARANA_UPSTREAM_UNAVAILABLE'},{status:scenario==='auth'?403:502});
- };
- const query=['barcode','invalid','offline','national'].includes(scenario)?'gtin='+gtin:'termo=kinder&categoria=1';
- const result=await creditFetch('/api/produtos?local='+local+'&'+query+'&ordem=0'+(scenario==='national'?'&uf=SC':''));
- const recovered=['barcode','description'].includes(scenario);
- assert.equal(result.status,recovered?200:scenario==='auth'?403:502);
- assert.equal(credits,1);assert.equal(directCalls,['auth','processing','national'].includes(scenario)?0:1);
- if(recovered){const body=await result.json();assert.equal(body.sourceCount,1);assert.equal(body.produtos[0].historyUnavailable,true);}
-}
-console.log('PASS: recuperação PR validada, sem novo crédito ou credenciais externas; falhas de autorização, processamento e outros estados não usam recuperação.');
-
-for(const scenario of ['found','empty','blocked','wrong-gtin']){
- clearGrants();let credits=0,direct=0,server=0;
- globalThis.fetch=async(url,init)=>{
-  if(url==='/api/credits'){credits++;return Response.json({grant:'private'});}
-  if(String(url).startsWith('https://menorpreco.')){
-   direct++;assert.equal(init.credentials,'omit');assert.deepEqual(init.headers,{Accept:'application/json, text/plain, */*'});
-   if(scenario==='blocked')throw new TypeError('CORS');
-   return Response.json({local:'6gkzquw8e',produtos:scenario==='empty'?[]:[{gtin:scenario==='wrong-gtin'?'7898024394938':'7909989354513',valor:'9.99'}]});
-  }
-  server++;assert.equal(init.headers['x-search-grant'],'private');return Response.json({produtos:[],sourceCount:0});
- };
- const result=await creditFetch('/api/produtos?local=6gkzquw8e&raio=20&gtin=7909989354513&offset=0');
- assert.equal(result.status,200);assert.equal(credits,1);assert.equal(direct,1);assert.equal(server,['blocked','wrong-gtin'].includes(scenario)?1:0);
- const data=await result.json();assert.equal(data.produtos.length,scenario==='found'?1:0);
-}
-console.log('PASS: valid barcode and zero results use one official request; CORS and wrong GTIN use the server once with the same credit.');
-
-for(const order of ['0','1','2','3']){
- clearGrants();let productCalls=0;
- globalThis.fetch=async(url,init)=>{
+clearGrants();let credits=0;const urls=[];
+const offer={gtin:'7909989354513',desc:'Produto',valor:'10',datahora:'2026-01-02T12:00:00Z',estabelecimento:{nm_emp:'Loja',nm_logr:'Rua A',nr_logr:'1',mun:'Curitiba',uf:'PR'}};
+globalThis.fetch=async(url,init)=>{
+ if(url==='/api/credits'){credits++;return Response.json({grant:'private'});}
+ const target=new URL(url);urls.push(target);assert.equal(target.origin,'https://menorpreco.notaparana.pr.gov.br');
+ assert.equal(init.credentials,'omit');assert.deepEqual(init.headers,{Accept:'application/json, text/plain, */*'});
+ return Response.json(target.pathname.endsWith('/categorias')?{categorias:[{id:37,desc:'Vestuário',qtd:60}]}:{local:'6gkzqf9vb',produtos:[{...offer,id:'old',datahora:'2026-01-01T12:00:00Z'},{...offer,id:'current'}],total:60,precos:{min:'10',max:'20'}});
+};
+await creditFetch('/api/categorias?local=6gkzqf9vb&termo=feminino&raio=7');
+const first=await(await creditFetch('/api/produtos?local=6gkzqf9vb&termo=feminino&categoria=37&raio=7&offset=0&ordem=0&expand=1')).json();
+await creditFetch('/api/produtos?local=6gkzqf9vb&termo=feminino&categoria=37&raio=7&offset=50&ordem=0&valor_min=10&valor_max=20');
+assert.equal(credits,1);assert.equal(urls.length,3);assert.equal(first.sourceCount,2);assert.equal(first.produtos.length,1);assert.equal(first.produtos[0].id,'current');assert.equal(first.produtos[0].historyUnavailable,true);
+assert.equal(urls[1].searchParams.has('expand'),false);assert.equal(urls[2].searchParams.get('valor_min'),'10');
+for(const order of ['0','1','2','3'])for(const type of ['barcode','fuel']){
+ clearGrants();globalThis.fetch=async(url,init)=>{
   if(url==='/api/credits')return Response.json({grant:'private'});
-  const target=new URL(url);assert.equal(target.origin,'https://menorpreco.notaparana.pr.gov.br');
-  assert.equal(target.searchParams.get('ordem'),order);assert.equal(target.searchParams.get('data'),'3');
-  assert.equal(target.searchParams.get('offset'),'50');assert.equal(target.searchParams.get('raio'),'7');productCalls++;
-  return Response.json({local:'6gkzqf9vb',produtos:[]});
+  const query=new URL(url);assert.equal(query.origin,'https://menorpreco.notaparana.pr.gov.br');assert.equal(query.searchParams.get('ordem'),order);assert.equal(query.searchParams.get('offset'),'50');assert.equal(query.searchParams.get('data'),'3');assert.equal(init.credentials,'omit');return Response.json({local:'6gkzqf9vb',produtos:[]});
  };
- assert.equal((await creditFetch('/api/produtos?local=6gkzqf9vb&raio=7&gtin=7909989354513&offset=40&data=-1&ordem='+order)).status,200);
- assert.equal(productCalls,1);
+ assert.equal((await creditFetch('/api/produtos?local=6gkzqf9vb&raio=7&offset=46&ordem='+order+'&'+(type==='barcode'?'gtin=7909989354513':'tp_comb=1'))).status,200);
 }
-console.log('PASS: all four official barcode orders are preserved, including pagination and radius.');
+clearGrants();let publicCalls=0;
+globalThis.fetch=async url=>{if(url==='/api/credits')return Response.json({grant:'private'});assert.ok(String(url).startsWith('https://menorpreco.'));publicCalls++;throw new TypeError('CORS');};
+assert.equal((await creditFetch('/api/produtos?local=6gkzqf9vb&gtin=7909989354513')).status,502);assert.equal(publicCalls,1);
+clearGrants();globalThis.fetch=async url=>{assert.equal(url,'/api/credits');return Response.json({error:'Sem saldo'},{status:402});};
+await assert.rejects(()=>creditFetch('/api/categorias?local=6gkzqf9vb&termo=arroz'),/Sem saldo/);
+clearGrants();globalThis.fetch=async(url,init)=>{if(url==='/api/credits')return Response.json({grant:'national'});assert.ok(String(url).startsWith('/api/brasil/produtos?'));assert.equal(init.headers['x-search-grant'],'national');return Response.json({produtos:[]});};
+assert.equal((await creditFetch('/api/brasil/produtos?local=6gkzqf9vb&uf=SC&latitude=-27&longitude=-48&termo=arroz')).status,200);
+console.log('PASS: all Parana searches call official API only, reuse credits, preserve orders/pages/ranges/latest notes, omit credentials, never fall back to removed routes; national route unchanged.');

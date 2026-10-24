@@ -3,7 +3,7 @@ import {registerHooks} from 'node:module';
 registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
 process.env.NEXT_PUBLIC_SUPABASE_URL='https://test.supabase.co';process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='test';process.env.SUPABASE_SECRET_KEY='sb_secret_test';
 const {paranaPriceRange,paranaRangeParams,paranaRequestOrder}=await import('./lib/parana-response.ts');
-const {GET}=await import('./app/api/produtos/route.ts');const {sign,scope}=await import('./lib/credit-server.ts');
+const {paranaFetch:GET}=await import('./lib/parana-browser.ts');const {sign,scope}=await import('./lib/credit-server.ts');
 assert.equal(paranaRequestOrder('recent-day'),'0');
 for(const order of ['0','1','2','3'])assert.equal(paranaRequestOrder(order),order);
 const range=paranaPriceRange({min:'24.99',max:'1499.00'});

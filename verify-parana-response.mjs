@@ -5,7 +5,7 @@ registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(
 process.env.NEXT_PUBLIC_SUPABASE_URL='https://test.supabase.co';process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='test';process.env.SUPABASE_SECRET_KEY='sb_secret_test';
 const {paranaHeaders,assertParanaProducts}=await import('./lib/parana-response.ts');
 const {observation}=await import('./lib/price-history-server.ts');const {storeIdentity}=await import('./lib/latest-offers.ts');
-const {GET}=await import('./app/api/produtos/route.ts');const {GET:categories}=await import('./app/api/categorias/route.ts');
+const {paranaFetch:GET}=await import('./lib/parana-browser.ts');const {paranaFetch:categories}=await import('./lib/parana-browser.ts');
 const {sign,scope}=await import('./lib/credit-server.ts');
 const local='6gkzquw8e',agent='Mozilla/5.0 Firefox/158.0';
 const request=url=>new Request(url,{headers:{'user-agent':agent,cookie:'pp_auth=test','x-search-grant':sign({account:'user:test',scope:scope(new URL(url).searchParams),exp:Date.now()+30000})}});
@@ -23,13 +23,13 @@ globalThis.fetch=async(input,init={})=>{
  if(url.includes('/auth/v1/user'))return Response.json({id:'test',email_confirmed_at:'2026-01-01'});
  if(url.includes('/rpc/record_price_observations')){historyWrites++;return Response.json([]);}
  const headers=input instanceof Request?input.headers:new Headers(init.headers);
- assert.equal(headers.get('user-agent'),agent);assert.equal(headers.get('cookie'),null);assert.equal(headers.get('x-search-grant'),null);assert.equal(headers.get('authorization'),null);
+ assert.equal(headers.get('user-agent'),null);assert.equal(init.credentials,'omit');assert.equal(headers.get('cookie'),null);assert.equal(headers.get('x-search-grant'),null);assert.equal(headers.get('authorization'),null);
  return Response.json(url.includes('/categorias')?{categorias:[{id:1,desc:'Alimentos',qtd:1}]}:{local:invalid?'':local,produtos:[offer]});
 };
 const url='https://site.example/api/produtos?local='+local+'&raio=22&gtin=80853671&offset=0&ordem=2&data=-1';
-let response=await GET(request(url));assert.equal(response.status,200);assert.equal((await response.json()).produtos[0].desc,'GOMA MENTOS 92G WINT');assert.equal(historyWrites,1);
-invalid=true;response=await GET(request(url));assert.equal(response.status,502);assert.equal(historyWrites,1);
+let response=await GET(request(url));assert.equal(response.status,200);assert.equal((await response.json()).produtos[0].desc,'GOMA MENTOS 92G WINT');assert.equal(historyWrites,0);
+invalid=true;response=await GET(request(url));assert.equal(response.status,502);assert.equal(historyWrites,0);
 assert.equal((await categories(request('https://site.example/api/categorias?local='+local+'&termo=mentos'))).status,200);
 const legacyStoreHash=createHash('sha256').update(storeIdentity(offer.estabelecimento)).digest('hex');
 assert.notEqual(observation(offer,'PR').store_key,legacyStoreHash);assert.equal(observation(offer,'BR').store_key,legacyStoreHash);
-console.log('PASS: actual User-Agent forwarded without credentials, inconsistent replies rejected before history writes, empty results preserved and legacy PR history isolated.');
+console.log('PASS: official browser calls omit site credentials, reject inconsistent replies, preserve empty results and do not write unverified browser prices to history.');

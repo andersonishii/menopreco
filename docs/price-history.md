@@ -1,6 +1,12 @@
 # Histórico de preços
 
-As consultas de produtos por descrição, GTIN e lista de compras alimentam um histórico compartilhado. Combustíveis também participam quando a resposta contém GTIN, endereço e data válidos. Sem esses identificadores, não é feita uma comparação aproximada por nome.
+## Estado atual após remoção dos proxies do Paraná
+
+As rotas `/api/categorias` e `/api/produtos` foram removidas a pedido do usuário. Todas as buscas do Paraná (categorias, descrição, código de barras, lista e combustíveis) consultam somente `https://menorpreco.notaparana.pr.gov.br/api/v1/` pelo navegador, após a reserva de crédito existente. Não há fallback para as duas rotas removidas. Falhas de CORS ou rede viram mensagens de indisponibilidade. A tentativa única de categorias após 6 segundos continua na API oficial, com aviso de progresso e sem outro crédito. A validação de localização, GTIN, faixas de preço, paginação e nota mais recente continua aplicada.
+
+Essas consultas do Paraná não gravam nem consultam o histórico compartilhado: preços recebidos no navegador não são aceitos como observações confiáveis no banco. O histórico dos demais estados continua pelo servidor. Login, créditos, pagamentos, municípios, imagens e demais rotas permanecem ativos. Os registros anteriores não foram apagados. As seções históricas abaixo descrevem decisões e verificações feitas ao longo da implementação, inclusive o fluxo antigo já removido.
+
+As consultas de produtos dos demais estados por descrição, GTIN e lista de compras alimentam um histórico compartilhado. Combustíveis também participam quando a resposta contém GTIN, endereço e data válidos. Sem esses identificadores, não é feita uma comparação aproximada por nome.
 
 O histórico considera GTIN normalizado, fonte da API e estabelecimento (UF, município, endereço, número, complemento e nome). Não compara preços de lojas diferentes como se fossem aumento ou queda. O preço usado é o valor final registrado, preservando a indicação de desconto. A data é a da nota fiscal, não a data da consulta.
 
@@ -12,7 +18,7 @@ A interface mostra queda, alta, estabilidade ou primeiro registro, com diferenç
 
 Somente `service_role` acessa a tabela e executa o RPC. RLS permanece habilitado. Não são armazenados usuário, e-mail, termo pesquisado ou posição do dispositivo. O estabelecimento é representado por hash; preços, GTIN e datas são compartilhados entre consultas.
 
-Para evitar gravações de preços forjados pelo navegador, `/api/produtos` e `/api/brasil/produtos` enriquecem as respostas no servidor. Categorias ainda podem usar o caminho direto do navegador. A interface não possui endpoint para submeter preços arbitrários. Registros idênticos são deduplicados; consultas repetidas não geram novas linhas para a mesma observação.
+Para evitar gravações de preços forjados pelo navegador, `/api/brasil/produtos` enriquece as respostas dos demais estados no servidor. As buscas do Paraná usam exclusivamente o navegador e não enriquecem o histórico. A interface não possui endpoint para submeter preços arbitrários. Registros idênticos são deduplicados; consultas repetidas não geram novas linhas para a mesma observação.
 
 O histórico tem orçamento de quatro segundos por consulta e não pode bloquear as ofertas se o banco estiver indisponível. Nesse caso, a interface informa indisponibilidade temporária. Abrir o painel do histórico não faz nova consulta paga.
 

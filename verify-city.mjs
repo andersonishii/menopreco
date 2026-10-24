@@ -10,7 +10,7 @@ const GET=new Function('municipalities','geohash','participatingStates','fail','
 let result=await (await GET(new Request('http://localhost/api/cidades?regiao=Umuarama'))).json();assert.equal(result.cidades[0].name,'Umuarama');assert.equal(result.cidades[0].uf,'PR');assert.ok(Number.isFinite(result.cidades[0].latitude));
 result=await (await GET(new Request('http://localhost/api/cidades?uf=RS&regiao=Porto%20Alegre'))).json();assert.equal(result.cidades[0].uf,'RS');assert.ok(result.cidades[0].longitude<0);
 assert.deepEqual(await (await GET(new Request('http://localhost/api/cidades?regiao=Inexistente'))).json(),{cidades:[]});assert.equal((await GET(new Request('http://localhost/api/cidades?uf=SP&regiao=São%20Paulo'))).status,400);
-const {GET:products}=await import('./app/api/produtos/route.ts');let called;
+const {paranaFetch:products}=await import('./lib/parana-browser.ts');let called;
 globalThis.fetch=async url=>{if(String(url).includes('/auth/v1/user'))return Response.json({id:'test',email_confirmed_at:'2026-01-01'});called=url.url||String(url);return Response.json({produtos:[]});};
 for(const query of ['gtin=7898024394938','termo=arroz&categoria=6']){const url='http://localhost/api/produtos?'+query+'&local=6gf0ffq61';const params=new URL(url).searchParams;assert.equal((await products(new Request(url,{headers:{cookie:'pp_auth=test','x-search-grant':sign({account:'user:test',scope:scope(params),exp:Date.now()+10000})}}))).status,200);assert.equal(new URL(called).searchParams.get('local'),'6gf0ffq61');}
 console.log('PASS: municípios por estado, coordenadas, estado indisponível e consultas do Paraná.');

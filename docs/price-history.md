@@ -42,3 +42,8 @@ Respostas não vazias com localização inconsistente ou GTIN diferente do consu
 A consulta de produtos usa fetch com URL e opções explícitas, sem cache externo. Falhas registram somente etapa, código e status HTTP, sem parâmetros, credenciais ou dados do usuário. Quando a rota informa falha externa ou resposta inconsistente, o navegador tenta a API pública com o crédito já reservado e sem enviar credenciais. A resposta precisa passar pelas mesmas validações de localização e GTIN. Erros de conta, saldo, autorização e processamento não acionam essa recuperação.
 
 Nessa recuperação, a lista continua selecionando a nota mais recente por produto e loja, mas o histórico fica indisponível: preços recebidos no navegador não são enviados ao banco compartilhado. Se a recuperação também falhar, o erro original permanece.
+
+
+## Parâmetros de produtos no Paraná
+
+Buscas por descrição com categoria e por código de barras usam `/api/v1/produtos` com `data=3` e `ordem=0`, tanto no servidor quanto na recuperação pelo navegador. Localização, raio, categoria, GTIN e paginação permanecem os escolhidos na busca. A ordenação visual continua aplicada aos resultados carregados. Combustíveis mantêm suas ordenações existentes.

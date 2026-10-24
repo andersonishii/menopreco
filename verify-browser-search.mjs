@@ -31,7 +31,7 @@ for(const scenario of ['barcode','description','invalid','offline','auth','proce
  globalThis.fetch=async(url,init)=>{
   if(url==='/api/credits'){credits++;return Response.json({grant:'private'});}
   if(String(url).startsWith('https://menorpreco.')){
-   directCalls++;assert.equal(init.credentials,'omit');assert.deepEqual(init.headers,{Accept:'application/json'});
+   directCalls++;assert.equal(new URL(url).searchParams.get('data'),'3');assert.equal(new URL(url).searchParams.get('ordem'),'0');assert.equal(init.credentials,'omit');assert.deepEqual(init.headers,{Accept:'application/json'});
    if(scenario==='offline')throw new TypeError('CORS');
    return Response.json({local:scenario==='invalid'?'':local,produtos:[{gtin,desc:'Kinder',valor:'5.99'}]});
   }

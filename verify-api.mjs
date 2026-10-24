@@ -6,7 +6,7 @@ const {sign,scope}=await import('./lib/credit-server.ts');const {GET:categories}
 const request=url=>new Request(url,{headers:{cookie:'pp_auth=test','x-search-grant':sign({account:'user:test',scope:scope(new URL(url).searchParams),exp:Date.now()+10000})}});
 let called;const mock=reply=>{globalThis.fetch=async url=>{const text=String(url.url||url);if(text.includes('/auth/v1/user'))return Response.json({id:'test',email_confirmed_at:'2026-01-01'});called=new URL(text);return reply();};};
 mock(()=>Response.json({categorias:[{id:6,desc:'Cereais',qtd:10}]}));let result=await categories(request('https://site.example/api/categorias?local=6gkzq99z5j5f&termo=arroz%20integral&raio=5'));assert.equal(result.status,200);assert.equal(called.searchParams.get('termo'),'arroz integral');assert.equal(called.searchParams.get('raio'),'5');
-for(const order of ['0','1','2','3']){mock(()=>Response.json({produtos:[]}));result=await products(request('https://site.example/api/produtos?local=6gkzq99z5j5f&termo=arroz&categoria=6&offset=50&ordem='+order));assert.equal(result.status,200);assert.equal(called.searchParams.get('ordem'),order);assert.equal(called.searchParams.get('offset'),'50');assert.equal(called.searchParams.get('categoria'),'6');}
+for(const order of ['0','1','2','3']){mock(()=>Response.json({produtos:[]}));result=await products(request('https://site.example/api/produtos?local=6gkzq99z5j5f&termo=arroz&categoria=6&offset=50&ordem='+order));assert.equal(result.status,200);assert.equal(called.searchParams.get('ordem'),'0');assert.equal(called.searchParams.get('data'),'3');assert.equal(called.searchParams.get('offset'),'50');assert.equal(called.searchParams.get('categoria'),'6');}
 assert.equal((await products(request('https://site.example/api/produtos?local=6gkzq99z5j5f&termo=arroz&categoria=abc'))).status,400);
 mock(()=>{throw Error('offline');});assert.equal((await categories(request('https://site.example/api/categorias?local=6gkzq99z5j5f&termo=arroz'))).status,502);
 console.log('PASS: Paraná preserva categorias, descrição, raio, ordenação, paginação e falhas.');
@@ -21,7 +21,7 @@ for(const handler of [categories,products]){
 }
 mock(()=>Response.json({produtos:[]}));
 assert.equal((await products(request('https://site.example/api/produtos?local=6gkzq99z5j5f&gtin=7891234567895'))).status,200);
-assert.equal(called.searchParams.get('gtin'),'7891234567895');
+assert.equal(called.searchParams.get('gtin'),'7891234567895');assert.equal(called.origin,'https://menorpreco.notaparana.pr.gov.br');assert.equal(called.pathname,'/api/v1/produtos');assert.equal(called.searchParams.get('data'),'3');assert.equal(called.searchParams.get('ordem'),'0');
 console.log('PASS: descrição no Paraná não expande GTIN; consulta direta por código de barras preservada.');
 
 for(const payload of [{produtos:[]},{unexpected:true},{produtos:[{id:'sample',desc:'Arroz',valor_tabela:'5.00'}],total:0}]){

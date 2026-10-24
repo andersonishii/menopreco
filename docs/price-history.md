@@ -1,10 +1,10 @@
 # Histórico de preços
 
-## Estado atual após remoção dos proxies do Paraná
+## Estado atual: busca direta com histórico por usuário
 
 As rotas `/api/categorias` e `/api/produtos` foram removidas a pedido do usuário. Todas as buscas do Paraná (categorias, descrição, código de barras, lista e combustíveis) consultam somente `https://menorpreco.notaparana.pr.gov.br/api/v1/` pelo navegador, após a reserva de crédito existente. Não há fallback para as duas rotas removidas. Falhas de CORS ou rede viram mensagens de indisponibilidade. A tentativa única de categorias após 6 segundos continua na API oficial, com aviso de progresso e sem outro crédito. A validação de localização, GTIN, faixas de preço, paginação e nota mais recente continua aplicada.
 
-Essas consultas do Paraná não gravam nem consultam o histórico compartilhado: preços recebidos no navegador não são aceitos como observações confiáveis no banco. O histórico dos demais estados continua pelo servidor. Login, créditos, pagamentos, municípios, imagens e demais rotas permanecem ativos. Os registros anteriores não foram apagados. As seções históricas abaixo descrevem decisões e verificações feitas ao longo da implementação, inclusive o fluxo antigo já removido.
+As consultas diretas do Paraná agora enviam ofertas válidas a `POST /api/price-history`, protegido por origem, login e grant da busca. Os registros recebidos do navegador formam um histórico privado por conta, em uma versão própria da chave de estabelecimento. Não se misturam com observações verificadas pelo servidor nem com registros de outras contas. A interface identifica o histórico das suas consultas e informa que os registros não foram verificados na fonte pelo servidor. O histórico dos demais estados continua pelo servidor. Login, créditos, pagamentos, municípios, imagens e demais rotas permanecem ativos. Os registros anteriores não foram apagados. As seções históricas abaixo descrevem decisões e verificações feitas ao longo da implementação, inclusive o fluxo antigo já removido.
 
 As consultas de produtos dos demais estados por descrição, GTIN e lista de compras alimentam um histórico compartilhado. Combustíveis também participam quando a resposta contém GTIN, endereço e data válidos. Sem esses identificadores, não é feita uma comparação aproximada por nome.
 
@@ -93,3 +93,16 @@ Um 502 da rota de categorias com código `PARANA_CATEGORIES_UNAVAILABLE` (ou a m
 ## Nova tentativa para HTTP 500 do Paraná
 
 Um HTTP 500 original da API oficial aciona uma única repetição após 8 segundos, em categorias, descrição, GTIN, lista ou combustíveis. O status original é preservado como metadado da resposta normalizada, inclusive quando uma fila cheia é apresentada como 503 amigável. A repetição mantém os parâmetros e o crédito. A tela principal anuncia o tempo de espera correspondente. O 502 de categorias mantém a repetição após 6 segundos. Há no máximo uma repetição automática por consulta, mesmo se a segunda resposta tiver outro código elegível. Limpar o grant durante a espera cancela a repetição. As buscas nacionais mantêm o fluxo existente.
+
+
+## Gravação do histórico das buscas diretas
+
+O navegador envia somente GTIN, data/hora, preço final, preço de tabela, desconto e os campos necessários para identificar o estabelecimento. Não envia descrição, número da nota, ID da oferta, distância, coordenadas ou posição do dispositivo no corpo de ofertas. O endpoint usa os parâmetros da busca apenas para verificar o grant; esses parâmetros não são gravados na tabela.
+
+O servidor aplica limites de 64 KiB e 50 ofertas por chamada, valida campos e restringe o lote ao Paraná e ao GTIN pesquisado quando houver. Origem, sessão, conta e grant são verificados antes da gravação. O rate limit existente de consultas autenticadas também vale para essa rota. O dono do histórico vem da sessão, nunca do payload.
+
+Os registros usam a chave de estabelecimento `sha256(client-reported-v1|userId|storeIdentity)`, sem armazenar o identificador de conta em texto aberto. A chave da observação continua incluindo GTIN, fonte, loja, data, preço e desconto, evitando duplicações. Essa separação impede que preços enviados por uma conta alterem o histórico de outra ou as comparações verificadas pelo servidor. Dados enviados pelo cliente continuam sendo não verificados, mesmo após as validações estruturais.
+
+Todas as notas recebidas são enviadas antes de selecionar a mais recente para a lista. As comparações retornam por índice, sem devolver os dados de estabelecimento enviados ao servidor. O cliente usa lotes de até 50, limita a coleta a 200 ofertas por resposta e a duas chamadas simultâneas. A falha ou demora do histórico mantém os preços visíveis com histórico indisponível. Não é reservado outro crédito. A tabela e o RPC existentes são reutilizados; não há migração de banco necessária.
+
+Os testes `verify-client-history-server.mjs`, `verify-client-history-flow.mjs` e `verify-history-display.mjs` cobrem isolamento, deduplicação, comparação, limites, falhas, payload mínimo e identificação dos registros na interface. Respostas bloqueadas por CORS ou com localização inconsistente não são enviadas ao histórico. Resultados antigos no cache permanecem como foram salvos; uma nova consulta começa a alimentar o novo histórico.

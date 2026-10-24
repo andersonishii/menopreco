@@ -1,7 +1,7 @@
 import type {PriceFields} from './offer-price';
 import type {Store} from './offer-details';
 export type HistoryPoint={price:number;recordedAt:string;discount:number};
-export type PriceHistory={points:HistoryPoint[];hasNewer:boolean};
+export type PriceHistory={points:HistoryPoint[];hasNewer:boolean;origin?:'client'};
 export type HistoricalOffer=PriceFields&{gtin?:string;datahora?:string;estabelecimento?:Store;priceHistory?:PriceHistory;historyUnavailable?:boolean};
 export function historyChange(price:number,history:PriceHistory){
  const previous=history.points[0];

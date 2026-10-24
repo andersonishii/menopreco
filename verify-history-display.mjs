@@ -20,3 +20,5 @@ assert.ok(render(8,{...history,hasNewer:true}).includes('Há um registro mais re
 const unavailable=render(8,history,{historyUnavailable:true});assert.ok(unavailable.includes('Histórico indisponível'));assert.ok(!unavailable.includes('Caiu'));
 assert.equal(render(8,undefined),'');
 console.log('PASS: componente real renderiza queda, alta, preço igual, primeiro registro, registro antigo, datas, expansão acessível e indisponibilidade.');
+
+const clientView=render(8,{...history,origin:"client"});assert.ok(clientView.includes("Histórico das suas consultas"));assert.ok(clientView.includes("não foram verificados diretamente na fonte"));

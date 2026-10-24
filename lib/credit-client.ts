@@ -1,5 +1,6 @@
 "use client";
 import {paranaFetch} from './parana-browser';
+import {saveClientPriceHistory} from './price-history-client';
 const grants=new Map<string,string>();
 let queue:Promise<unknown>=Promise.resolve();
 const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'|uf:'+p.get('uf')+'|lat:'+Number(p.get('latitude'))+'|lon:'+Number(p.get('longitude')):p.get('local'),p.get('tp_comb')?'fuel:'+p.get('tp_comb'):p.get('gtin')?'gtin:'+p.get('gtin'):'term:'+p.get('termo')?.trim()].join('|');
@@ -8,13 +9,13 @@ export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state
  }
  const parana=['/api/categorias','/api/produtos'].includes(target.pathname)&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR');
  if(parana){
-  let response=await paranaFetch(new Request(target));
+  let response=await paranaFetch(new Request(target),offers=>saveClientPriceHistory(offers,target,grants.get(scope)!));
   if(!response.ok){
    const failure=await response.clone().json().catch(()=>null);
    const delay=failure?.upstreamStatus===500?8000:target.pathname==='/api/categorias'&&response.status===502&&failure?.code==='PARANA_CATEGORIES_UNAVAILABLE'?6000:0;
    if(delay)try{
     const retryGrant=grants.get(scope);onCategoryRetry?.('waiting',delay/1000);await new Promise<void>(resolve=>setTimeout(resolve,delay));
-    if(retryGrant&&grants.get(scope)===retryGrant){onCategoryRetry?.('retrying');response=await paranaFetch(new Request(target));}
+    if(retryGrant&&grants.get(scope)===retryGrant){onCategoryRetry?.('retrying');response=await paranaFetch(new Request(target),offers=>saveClientPriceHistory(offers,target,grants.get(scope)!));}
    }finally{onCategoryRetry?.('done');}
   }
   return response;

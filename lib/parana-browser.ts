@@ -3,7 +3,7 @@ import {readDescriptionResponse} from './description-response';
 import {latestStoreOffers} from './latest-offers';
 const json=(body:object,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
 const categoryError=(upstreamStatus?:number)=>json({...(upstreamStatus?{upstreamStatus}:{}),error:'Não foi possível consultar as categorias no Nota Paraná. Tente novamente em instantes.',code:'PARANA_CATEGORIES_UNAVAILABLE'},502);
-export async function paranaFetch(request:Request):Promise<Response>{
+export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promise<any[]>):Promise<Response>{
  const target=new URL(request.url),query=target.searchParams,categories=target.pathname.endsWith('/categorias');
  const local=query.get('local'),raio=query.get('raio')||(query.has('tp_comb')?'7':'22');
  if(!local||!/^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(local))return json({error:'Selecione uma cidade válida.'},400);
@@ -33,7 +33,9 @@ export async function paranaFetch(request:Request):Promise<Response>{
   const data=await response.json();
   if(categories)return json({categorias:readDescriptionResponse(data).categories});
   assertParanaProducts(data,local,gtin);
-  return json({...data,sourceCount:data.produtos.length,produtos:latestStoreOffers(data.produtos.map(offer=>({...offer,historyUnavailable:true})))});
+  let offers=data.produtos.map(offer=>({...offer,priceHistory:undefined,historyUnavailable:true}));
+  if(enrich)try{offers=await enrich(offers);}catch{/* Display prices even when history is unavailable. */}
+  return json({...data,sourceCount:data.produtos.length,produtos:latestStoreOffers(offers)});
  }catch{
   return categories?categoryError():json({error:'Não foi possível consultar o Nota Paraná. Tente novamente.',code:'PARANA_UPSTREAM_UNAVAILABLE'},502);
  }

@@ -35,3 +35,10 @@ Todas as notas válidas retornadas pela API são enviadas ao histórico antes da
 As rotas do Paraná encaminham somente o User-Agent real do navegador e Accept para a API pública. Cookies, autorização e créditos do Preço Perto não são enviados ao Nota Paraná. Nos testes com o mesmo GTIN e filtros, a chamada sem esse User-Agent retornou textos alterados; a chamada com o User-Agent retornou descrições corretas. Esse comportamento foi observado, não presumido a partir da aparência dos nomes.
 
 Respostas não vazias com localização inconsistente ou GTIN diferente do consultado são rejeitadas antes da gravação. Resultados vazios válidos continuam sendo aceitos. As observações antigas do Paraná foram isoladas por uma nova versão da chave de estabelecimento no histórico: não são apagadas, mas não participam das novas comparações. As observações dos demais estados preservam as chaves existentes. O cache de resultados anterior à correção é invalidado uma vez, mantendo os 30 minutos de validade do novo cache.
+
+
+## Recuperação de consultas do Paraná
+
+A consulta de produtos usa fetch com URL e opções explícitas, sem cache externo. Falhas registram somente etapa, código e status HTTP, sem parâmetros, credenciais ou dados do usuário. Quando a rota informa falha externa ou resposta inconsistente, o navegador tenta a API pública com o crédito já reservado e sem enviar credenciais. A resposta precisa passar pelas mesmas validações de localização e GTIN. Erros de conta, saldo, autorização e processamento não acionam essa recuperação.
+
+Nessa recuperação, a lista continua selecionando a nota mais recente por produto e loja, mas o histórico fica indisponível: preços recebidos no navegador não são enviados ao banco compartilhado. Se a recuperação também falhar, o erro original permanece.

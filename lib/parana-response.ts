@@ -1,4 +1,5 @@
 import {normalizedGtin} from './description-offers';
+export class ParanaResponseError extends Error{code='PARANA_RESPONSE_INCONSISTENT';}
 export function paranaHeaders(request:Request):HeadersInit{
  const headers:Record<string,string>={Accept:'application/json'};
  const agent=request.headers.get('user-agent');
@@ -7,8 +8,8 @@ export function paranaHeaders(request:Request):HeadersInit{
  return headers;
 }
 export function assertParanaProducts(data:unknown,local:string,gtin?:string|null):asserts data is {produtos:any[];[key:string]:unknown}{
- if(!data||typeof data!=='object'||!Array.isArray((data as any).produtos))throw Error('Resposta de produtos inválida.');
+ if(!data||typeof data!=='object'||!Array.isArray((data as any).produtos))throw new ParanaResponseError('Resposta de produtos inválida.');
  const body=data as {produtos:any[];local?:unknown};
- if(body.produtos.length&&typeof body.local==='string'&&body.local!==local)throw Error('A resposta do Nota Paraná não corresponde à localização consultada.');
- if(gtin&&body.produtos.some(offer=>normalizedGtin(offer?.gtin)!==normalizedGtin(gtin)))throw Error('A resposta do Nota Paraná não corresponde ao código consultado.');
+ if(body.produtos.length&&typeof body.local==='string'&&body.local!==local)throw new ParanaResponseError('A resposta do Nota Paraná não corresponde à localização consultada.');
+ if(gtin&&body.produtos.some(offer=>normalizedGtin(offer?.gtin)!==normalizedGtin(gtin)))throw new ParanaResponseError('A resposta do Nota Paraná não corresponde ao código consultado.');
 }

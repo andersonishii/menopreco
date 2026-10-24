@@ -1,4 +1,4 @@
-import {paranaHeaders,assertParanaProducts} from '../../../lib/parana-response';
+import {paranaHeaders,assertParanaProducts,ParanaResponseError} from '../../../lib/parana-response';
 import {withPriceHistory} from '../../../lib/price-history-server';
 import {requireSearch,fail} from '../../../lib/credit-server';
 export async function GET(request:Request){
@@ -14,5 +14,16 @@ export async function GET(request:Request){
  if(fuel===null&&(gtin?!/^(\d{8}|\d{12,14})$/.test(gtin):(!termo||termo.length>120||!categoria||!/^\d+$/.test(categoria))))return Response.json({error:'Código de barras ou descrição e categoria inválidos.'},{status:400});
  const params=new URLSearchParams({local,raio,offset,data:fuel?'3':'-1',ordem,...(fuel?{tp_comb:fuel}:gtin?{gtin}:{termo:termo!,categoria:categoria!})});
  try{await requireSearch(request);}catch(e){return fail(e);}
- try{const response=await fetch(new Request('https://menorpreco.notaparana.pr.gov.br/api/v1/produtos?'+params,{headers:paranaHeaders(request),signal:AbortSignal.timeout(20000)}));if(!response.ok)throw new Error();const data=await response.json() as {produtos?:unknown};assertParanaProducts(data,local,gtin);return Response.json({...data,sourceCount:data.produtos.length,produtos:await withPriceHistory(data.produtos as any[],'PR')},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Não foi possível consultar o Nota Paraná. Tente novamente.'},{status:502});}
+ let stage='upstream',upstreamStatus:number|undefined;
+ try{
+  const response=await fetch('https://menorpreco.notaparana.pr.gov.br/api/v1/produtos?'+params,{headers:paranaHeaders(request),cache:'no-store',signal:AbortSignal.timeout(20000)});
+  upstreamStatus=response.status;if(!response.ok)throw new Error();
+  stage='response';const data=await response.json();assertParanaProducts(data,local,gtin);
+  stage='history';const produtos=await withPriceHistory(data.produtos,'PR');
+  return Response.json({...data,sourceCount:data.produtos.length,produtos},{headers:{'Cache-Control':'no-store'}});
+ }catch(error){
+  const code=error instanceof ParanaResponseError?error.code:stage==='history'?'PARANA_PROCESSING_FAILED':'PARANA_UPSTREAM_UNAVAILABLE';
+  console.warn('[parana-products]',{code,stage,upstreamStatus});
+  return Response.json({error:'Não foi possível consultar o Nota Paraná. Tente novamente.',code},{status:502,headers:{'Cache-Control':'no-store'}});
+ }
 }

@@ -2,9 +2,11 @@ import {queueParanaRequest} from './parana-queue';
 import {assertParanaProducts,ParanaResponseError,paranaBusyResponse,paranaOffset,paranaPriceRange,paranaProductsUrl} from './parana-response';
 import {readDescriptionResponse} from './description-response';
 import {latestStoreOffers} from './latest-offers';
+class BrowserAccessError extends Error{}
+type FetchOptions={headers?:HeadersInit;signal?:AbortSignal;server?:boolean;queue?:typeof queueParanaRequest};
 const json=(body:object,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
 const categoryError=(upstreamStatus?:number)=>json({...(upstreamStatus?{upstreamStatus}:{}),error:'Não foi possível consultar as categorias no Nota Paraná. Tente novamente em instantes.',code:'PARANA_CATEGORIES_UNAVAILABLE'},502);
-export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promise<any[]>):Promise<Response>{
+export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promise<any[]>,options:FetchOptions={}):Promise<Response>{
  const target=new URL(request.url),query=target.searchParams,categories=target.pathname.endsWith('/categorias');
  const local=query.get('local'),raio=query.get('raio')||(query.has('tp_comb')?'7':'22');
  if(!local||!/^[0123456789bcdefghjkmnpqrstuvwxyz]{4,12}$/.test(local))return json({error:'Selecione uma cidade válida.'},400);
@@ -25,7 +27,11 @@ export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promis
   upstream=paranaProductsUrl(params);
  }
  try{
-  const response=await queueParanaRequest(upstream,()=>fetch(upstream,{headers:{Accept:'application/json, text/plain, */*'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(20000)}));
+  const response=await (options.queue||queueParanaRequest)(upstream,async()=>{
+   const timeout=AbortSignal.timeout(20000),signal=options.signal?AbortSignal.any([timeout,options.signal]):timeout;
+   try{return await fetch(upstream,{headers:options.headers||{Accept:'application/json, text/plain, */*'},credentials:'omit',cache:'no-store',signal});}
+   catch(error){if(!options.server&&error instanceof TypeError)throw new BrowserAccessError();throw error;}
+  });
   if(!response.ok){
    const busy=await paranaBusyResponse(response);if(busy){const headers=new Headers(busy.headers);if(response.status===500)headers.set('Retry-After','8');return Response.json({...await busy.json(),upstreamStatus:response.status},{status:busy.status,headers});}
    if(categories&&(response.status===401||response.status===403))return json({error:'O serviço do Nota Paraná recusou a consulta. Tente novamente mais tarde.',code:'PARANA_UPSTREAM_REJECTED'},502);
@@ -38,6 +44,7 @@ export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promis
   if(enrich)try{offers=await enrich(offers);}catch{/* Display prices even when history is unavailable. */}
   return json({...data,sourceCount:data.produtos.length,produtos:latestStoreOffers(offers)});
  }catch(error){
+  if(error instanceof BrowserAccessError)return json({error:'O navegador não conseguiu acessar o Nota Paraná. Pode haver bloqueio de CORS ou falha de conexão.',code:'PARANA_BROWSER_ACCESS_UNAVAILABLE'},502);
   if(error instanceof ParanaResponseError)return json({error:'O Nota Paraná retornou dados inconsistentes para esta busca. Tente novamente em instantes.',code:error.code},502);
   return categories?categoryError():json({error:'Não foi possível consultar o Nota Paraná. Tente novamente.',code:'PARANA_UPSTREAM_UNAVAILABLE'},502);
  }

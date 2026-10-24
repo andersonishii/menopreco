@@ -18,7 +18,7 @@ try{
   };
   const result=await creditFetch(path+'?local=6gkzqf9vb&raio=7&offset=0&ordem=3&'+query,false,(state,seconds)=>progress.push([state,seconds]));
   assert.equal(credits,1);assert.equal(calls,outcome==='cancelled'?1:2);assert.deepEqual(delays.filter(ms=>ms>=6000),[8000]);assert.equal(result.status,outcome==='success'?200:outcome==='overload'?503:502);
-  assert.deepEqual(progress,outcome==='cancelled'?[['waiting',8],['done',undefined]]:[['waiting',8],['retrying',undefined],['done',undefined]]);
+  assert.deepEqual(progress.filter(value=>value[0]!=='device'),outcome==='cancelled'?[['waiting',8],['done',undefined]]:[['waiting',8],['retrying',undefined],['done',undefined]]);
  }
  clearGrants();let calls=0;const delays=[];
  globalThis.setTimeout=(resolve,ms)=>{delays.push(ms);queueMicrotask(resolve);return 0;};

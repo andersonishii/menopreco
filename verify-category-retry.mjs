@@ -17,7 +17,7 @@ try{
   const operation=()=>creditFetch('/api/categorias?local=6gkzqf9vb&termo=feminino&raio=7',false,status=>progress.push(status));
   if(scenario==='auth')await assert.rejects(operation,/Sessão expirada/);else assert.equal((await operation()).status,['success','empty'].includes(scenario)?200:502);
   const retry=['success','permanent','cancelled'].includes(scenario);
-  assert.deepEqual(delays.filter(ms=>ms>=6000),retry?[6000]:[]);assert.deepEqual(progress,retry?scenario==='cancelled'?['waiting','done']:['waiting','retrying','done']:[]);
+  assert.deepEqual(delays.filter(ms=>ms>=6000),retry?[6000]:[]);assert.deepEqual(progress.filter(value=>value!=='device'),retry?scenario==='cancelled'?['waiting','done']:['waiting','retrying','done']:[]);
   assert.equal(credits,1);assert.equal(official,scenario==='auth'?0:retry&&scenario!=='cancelled'?2:1);
  }
 }finally{globalThis.setTimeout=timer;clearGrants();}

@@ -27,3 +27,5 @@ const {default:ConnectionInfo}=await import('./components/connection-info.tsx');
 const connectionView=(source,cached=false)=>renderToStaticMarkup(React.createElement(ConnectionInfo,{source,cached}));
 assert.ok(connectionView('device').includes('IP do seu dispositivo'));assert.ok(connectionView('server').includes('IP do servidor'));assert.ok(connectionView('server',true).includes('Consulta salva'));assert.ok(connectionView('server',true).includes('sem nova consulta'));assert.equal(connectionView(null),'');
 console.log('PASS: discreet connection component distinguishes device, server, cached results and unknown origins.');
+
+assert.ok(renderToStaticMarkup(React.createElement(ConnectionInfo,{source:"server",fallback:true})).includes("após falha no dispositivo"));

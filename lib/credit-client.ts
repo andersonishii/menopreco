@@ -6,7 +6,7 @@ import {markConnection} from './connection';
 const grants=new Map<string,string>();
 let queue:Promise<unknown>=Promise.resolve();
 const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'|uf:'+p.get('uf')+'|lat:'+Number(p.get('latitude'))+'|lon:'+Number(p.get('longitude')):p.get('local'),p.get('tp_comb')?'fuel:'+p.get('tp_comb'):p.get('gtin')?'gtin:'+p.get('gtin'):'term:'+p.get('termo')?.trim()].join('|');
-export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state:'waiting'|'retrying'|'server'|'done',seconds?:number)=>void):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(reset)grants.delete(scope);if(!grants.has(scope)){
+export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state:'device'|'waiting'|'retrying'|'server'|'done',seconds?:number)=>void):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(reset)grants.delete(scope);if(!grants.has(scope)){
  const run=queue.then(async()=>{if(grants.has(scope))return;const r=await fetch('/api/credits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),params:Object.fromEntries(target.searchParams)})});const data=await r.json();window.dispatchEvent(new CustomEvent('credits-changed'));if(!r.ok){if(data.code==='MPBR_CONNECTION_REQUIRED')window.dispatchEvent(new CustomEvent('mpbr-connection-required'));if(r.status===402||r.status===401)window.dispatchEvent(new CustomEvent('account-required'));throw new Error(data.error||'Não foi possível iniciar a consulta.');}grants.set(scope,data.grant);});queue=run.catch(()=>{});await run;
  }
  const parana=['/api/categorias','/api/produtos'].includes(target.pathname)&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR');
@@ -22,7 +22,7 @@ export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state
    }catch{return Response.json({error:'Não foi possível concluir a consulta alternativa pelo servidor. Tente novamente em instantes.',code:'PARANA_SERVER_UNAVAILABLE'},{status:502});}finally{onCategoryRetry?.('done');}
   };
   const attempt=async()=>{
-   if(usingServer)return serverFetch();
+   usingServer=false;onCategoryRetry?.('device');
    const direct=await paranaFetch(new Request(target),offers=>saveClientPriceHistory(offers,target,grants.get(scope)!));
    if(direct.status===502){const failure=await direct.clone().json().catch(()=>null);if(failure?.code==='PARANA_BROWSER_ACCESS_UNAVAILABLE'){usingServer=true;return serverFetch();}}
    return direct;

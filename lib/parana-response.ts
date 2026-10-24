@@ -41,3 +41,11 @@ export async function paranaBusyResponse(response:Response):Promise<Response|nul
  if(response.status===500){const body=await response.clone().json().catch(()=>null);busy=typeof body?.message==='string'&&body.message.includes('es_rejected_execution_exception');}
  return busy?Response.json({error:'O serviço do Nota Paraná está sobrecarregado. Aguarde alguns instantes e tente novamente.',code:'PARANA_UPSTREAM_BUSY'},{status:503,headers:{'Cache-Control':'no-store','Retry-After':'10'}}):null;
 }
+
+// Legacy caches stored a count-derived next offset, not a verified page cursor.
+// Revisit page 50 safely instead of skipping unconfirmed pages from those caches.
+export function restoredParanaOffset(saved:{paginationVersion?:unknown;lastLoadedOffset?:unknown},hasResults:boolean){
+ if(!hasResults)return 0;
+ const last=saved.lastLoadedOffset;
+ return saved.paginationVersion===1&&typeof last==='number'&&Number.isSafeInteger(last)&&last>=0&&last%50===0?last+50:50;
+}

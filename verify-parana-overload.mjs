@@ -18,7 +18,8 @@ const result=await GET(new Request('https://site.example/api/produtos?'+params,{
 assert.equal(result.status,503);assert.equal(externalCalls,1);
 globalThis.location={origin:'https://site.example'};globalThis.window=new EventTarget();
 const {creditFetch,clearGrants}=await import('./lib/credit-client.ts');
-for(const barcode of [true,false]){
+const originalTimer=globalThis.setTimeout;const retryDelays=[];globalThis.setTimeout=(resolve,ms)=>{retryDelays.push(ms);queueMicrotask(resolve);return 0;};
+try{for(const barcode of [true,false]){
  clearGrants();let credits=0,officialCalls=0,recover=false;
  globalThis.fetch=async(url,init)=>{
   if(url==='/api/credits'){credits++;return Response.json({grant:'private'});}
@@ -28,8 +29,9 @@ for(const barcode of [true,false]){
  };
  const query='/api/produtos?local=6gkzquw8e&raio=20&offset=46&ordem=2&'+(barcode?'gtin=7909989354513':'termo=feminino&categoria=37');
  const first=await creditFetch(query);assert.equal(first.status,503);
- assert.equal(officialCalls,1);
- recover=true;assert.equal((await creditFetch(query)).status,200);assert.equal(credits,1);
  assert.equal(officialCalls,2);
-}
+ recover=true;assert.equal((await creditFetch(query)).status,200);assert.equal(credits,1);
+ assert.equal(officialCalls,3);
+}}finally{globalThis.setTimeout=originalTimer;}
+assert.deepEqual(retryDelays,[8000,8000]);
 console.log('PASS: stale offsets aligned, external overload sanitized as retryable 503, no immediate duplicate lookup, manual retry uses same page and one credit.');

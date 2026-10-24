@@ -3,16 +3,17 @@ import {paranaFetch} from './parana-browser';
 const grants=new Map<string,string>();
 let queue:Promise<unknown>=Promise.resolve();
 const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'|uf:'+p.get('uf')+'|lat:'+Number(p.get('latitude'))+'|lon:'+Number(p.get('longitude')):p.get('local'),p.get('tp_comb')?'fuel:'+p.get('tp_comb'):p.get('gtin')?'gtin:'+p.get('gtin'):'term:'+p.get('termo')?.trim()].join('|');
-export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state:'waiting'|'retrying'|'done')=>void):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(reset)grants.delete(scope);if(!grants.has(scope)){
+export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state:'waiting'|'retrying'|'done',seconds?:number)=>void):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(reset)grants.delete(scope);if(!grants.has(scope)){
  const run=queue.then(async()=>{if(grants.has(scope))return;const r=await fetch('/api/credits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),params:Object.fromEntries(target.searchParams)})});const data=await r.json();window.dispatchEvent(new CustomEvent('credits-changed'));if(!r.ok){if(data.code==='MPBR_CONNECTION_REQUIRED')window.dispatchEvent(new CustomEvent('mpbr-connection-required'));if(r.status===402||r.status===401)window.dispatchEvent(new CustomEvent('account-required'));throw new Error(data.error||'Não foi possível iniciar a consulta.');}grants.set(scope,data.grant);});queue=run.catch(()=>{});await run;
  }
  const parana=['/api/categorias','/api/produtos'].includes(target.pathname)&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR');
  if(parana){
   let response=await paranaFetch(new Request(target));
-  if(target.pathname==='/api/categorias'&&response.status===502){
+  if(!response.ok){
    const failure=await response.clone().json().catch(()=>null);
-   if(failure?.code==='PARANA_CATEGORIES_UNAVAILABLE')try{
-    const retryGrant=grants.get(scope);onCategoryRetry?.('waiting');await new Promise<void>(resolve=>setTimeout(resolve,6000));
+   const delay=failure?.upstreamStatus===500?8000:target.pathname==='/api/categorias'&&response.status===502&&failure?.code==='PARANA_CATEGORIES_UNAVAILABLE'?6000:0;
+   if(delay)try{
+    const retryGrant=grants.get(scope);onCategoryRetry?.('waiting',delay/1000);await new Promise<void>(resolve=>setTimeout(resolve,delay));
     if(retryGrant&&grants.get(scope)===retryGrant){onCategoryRetry?.('retrying');response=await paranaFetch(new Request(target));}
    }finally{onCategoryRetry?.('done');}
   }

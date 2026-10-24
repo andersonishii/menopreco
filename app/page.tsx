@@ -104,7 +104,7 @@ export default function Page(){
   const urls=[direct];
   let failure:unknown;
   for(const url of urls){try{
-   const r=await creditFetch(url,false,status=>setCategoryProgress(status==='waiting'?'Sua pesquisa continua em andamento. Faremos uma nova tentativa em 6 segundos.':status==='retrying'?'Sua pesquisa continua em andamento. Consultando as categorias novamente…':''));
+   const r=await creditFetch(url,false,(status,seconds=6)=>setCategoryProgress(status==='waiting'?`Sua pesquisa continua em andamento. Faremos uma nova tentativa em ${seconds} segundos.`:status==='retrying'?'Sua pesquisa continua em andamento. Consultando novamente…':''));
    const data=await r.json() as {error?:string;categorias?:Category[];expansionWarning?:string};
    if(!r.ok)throw new Error(data.error||'Não foi possível consultar os preços.');
    if(kind==='categorias')readDescriptionResponse(data);

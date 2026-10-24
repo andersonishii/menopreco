@@ -88,3 +88,8 @@ Por solicitação do usuário, uma página adicional (offset 50 ou maior) com me
 ## Nova tentativa na busca de categorias
 
 Um 502 da rota de categorias com código `PARANA_CATEGORIES_UNAVAILABLE` (ou a mensagem equivalente de uma versão anterior) aciona uma única repetição após 6 segundos. A tela mantém a pesquisa em andamento e anuncia a espera e a nova tentativa com uma região de status acessível. A repetição usa os mesmos parâmetros e grant, sem reservar outro crédito. Erros de autenticação, resultados vazios válidos e outros tipos de erro não entram nessa regra. Uma segunda falha é apresentada normalmente; não há loop. Se o grant for limpo durante a espera, a repetição não é enviada.
+
+
+## Nova tentativa para HTTP 500 do Paraná
+
+Um HTTP 500 original da API oficial aciona uma única repetição após 8 segundos, em categorias, descrição, GTIN, lista ou combustíveis. O status original é preservado como metadado da resposta normalizada, inclusive quando uma fila cheia é apresentada como 503 amigável. A repetição mantém os parâmetros e o crédito. A tela principal anuncia o tempo de espera correspondente. O 502 de categorias mantém a repetição após 6 segundos. Há no máximo uma repetição automática por consulta, mesmo se a segunda resposta tiver outro código elegível. Limpar o grant durante a espera cancela a repetição. As buscas nacionais mantêm o fluxo existente.

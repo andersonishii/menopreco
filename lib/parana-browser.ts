@@ -2,7 +2,7 @@ import {assertParanaProducts,paranaBusyResponse,paranaOffset,paranaPriceRange,pa
 import {readDescriptionResponse} from './description-response';
 import {latestStoreOffers} from './latest-offers';
 const json=(body:object,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
-const categoryError=()=>json({error:'Não foi possível consultar as categorias no Nota Paraná. Tente novamente em instantes.',code:'PARANA_CATEGORIES_UNAVAILABLE'},502);
+const categoryError=(upstreamStatus?:number)=>json({...(upstreamStatus?{upstreamStatus}:{}),error:'Não foi possível consultar as categorias no Nota Paraná. Tente novamente em instantes.',code:'PARANA_CATEGORIES_UNAVAILABLE'},502);
 export async function paranaFetch(request:Request):Promise<Response>{
  const target=new URL(request.url),query=target.searchParams,categories=target.pathname.endsWith('/categorias');
  const local=query.get('local'),raio=query.get('raio')||(query.has('tp_comb')?'7':'22');
@@ -26,9 +26,9 @@ export async function paranaFetch(request:Request):Promise<Response>{
  try{
   const response=await fetch(upstream,{headers:{Accept:'application/json, text/plain, */*'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(20000)});
   if(!response.ok){
-   const busy=await paranaBusyResponse(response);if(busy)return busy;
+   const busy=await paranaBusyResponse(response);if(busy){const headers=new Headers(busy.headers);if(response.status===500)headers.set('Retry-After','8');return Response.json({...await busy.json(),upstreamStatus:response.status},{status:busy.status,headers});}
    if(categories&&(response.status===401||response.status===403))return json({error:'O serviço do Nota Paraná recusou a consulta. Tente novamente mais tarde.',code:'PARANA_UPSTREAM_REJECTED'},502);
-   return categories?categoryError():json({error:'Não foi possível consultar o Nota Paraná. Tente novamente.',code:'PARANA_UPSTREAM_UNAVAILABLE'},502);
+   return categories?categoryError(response.status):json({error:'Não foi possível consultar o Nota Paraná. Tente novamente.',code:'PARANA_UPSTREAM_UNAVAILABLE',upstreamStatus:response.status},502);
   }
   const data=await response.json();
   if(categories)return json({categorias:readDescriptionResponse(data).categories});

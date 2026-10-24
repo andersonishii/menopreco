@@ -28,7 +28,7 @@ globalThis.fetch=async(input,init={})=>{
 };
 const url='https://site.example/api/produtos?local='+local+'&raio=22&gtin=80853671&offset=0&ordem=2&data=-1';
 let response=await GET(request(url));assert.equal(response.status,200);assert.equal((await response.json()).produtos[0].desc,'GOMA MENTOS 92G WINT');assert.equal(historyWrites,0);
-invalid=true;response=await GET(request(url));assert.equal(response.status,502);assert.equal(historyWrites,0);
+invalid=true;response=await GET(request(url));assert.equal(response.status,502);assert.equal(historyWrites,0);assert.equal((await response.json()).code,'PARANA_RESPONSE_INCONSISTENT');
 assert.equal((await categories(request('https://site.example/api/categorias?local='+local+'&termo=mentos'))).status,200);
 const legacyStoreHash=createHash('sha256').update(storeIdentity(offer.estabelecimento)).digest('hex');
 assert.notEqual(observation(offer,'PR').store_key,legacyStoreHash);assert.equal(observation(offer,'BR').store_key,legacyStoreHash);

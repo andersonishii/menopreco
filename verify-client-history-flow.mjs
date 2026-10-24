@@ -33,6 +33,6 @@ for(const failure of ['cors','inconsistent-local']){
   if(failure==='cors')throw new TypeError('CORS blocked');
   return Response.json({local:'',produtos:[offer]});
  };
- assert.equal((await creditFetch('/api/produtos?local=6gkzqf9vb&raio=7&gtin=7909989354513&offset=0')).status,502);assert.equal(historyCalls,0);
+ const failed=await creditFetch('/api/produtos?local=6gkzqf9vb&raio=7&gtin=7909989354513&offset=0');assert.equal(failed.status,502);if(failure==='inconsistent-local')assert.equal((await failed.json()).code,'PARANA_RESPONSE_INCONSISTENT');assert.equal(historyCalls,0);
 }
 console.log('PASS: blocked or inconsistent official responses never reach history ingestion.');

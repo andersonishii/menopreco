@@ -1,4 +1,4 @@
-import {assertParanaProducts,paranaBusyResponse,paranaOffset,paranaPriceRange,paranaProductsUrl} from './parana-response';
+import {assertParanaProducts,ParanaResponseError,paranaBusyResponse,paranaOffset,paranaPriceRange,paranaProductsUrl} from './parana-response';
 import {readDescriptionResponse} from './description-response';
 import {latestStoreOffers} from './latest-offers';
 const json=(body:object,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
@@ -36,7 +36,8 @@ export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promis
   let offers=data.produtos.map(offer=>({...offer,priceHistory:undefined,historyUnavailable:true}));
   if(enrich)try{offers=await enrich(offers);}catch{/* Display prices even when history is unavailable. */}
   return json({...data,sourceCount:data.produtos.length,produtos:latestStoreOffers(offers)});
- }catch{
+ }catch(error){
+  if(error instanceof ParanaResponseError)return json({error:'O Nota Paraná retornou dados inconsistentes para esta busca. Tente novamente em instantes.',code:error.code},502);
   return categories?categoryError():json({error:'Não foi possível consultar o Nota Paraná. Tente novamente.',code:'PARANA_UPSTREAM_UNAVAILABLE'},502);
  }
 }

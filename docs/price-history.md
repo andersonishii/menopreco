@@ -106,3 +106,10 @@ Os registros usam a chave de estabelecimento `sha256(client-reported-v1|userId|s
 Todas as notas recebidas são enviadas antes de selecionar a mais recente para a lista. As comparações retornam por índice, sem devolver os dados de estabelecimento enviados ao servidor. O cliente usa lotes de até 50, limita a coleta a 200 ofertas por resposta e a duas chamadas simultâneas. A falha ou demora do histórico mantém os preços visíveis com histórico indisponível. Não é reservado outro crédito. A tabela e o RPC existentes são reutilizados; não há migração de banco necessária.
 
 Os testes `verify-client-history-server.mjs`, `verify-client-history-flow.mjs` e `verify-history-display.mjs` cobrem isolamento, deduplicação, comparação, limites, falhas, payload mínimo e identificação dos registros na interface. Respostas bloqueadas por CORS ou com localização inconsistente não são enviadas ao histórico. Resultados antigos no cache permanecem como foram salvos; uma nova consulta começa a alimentar o novo histórico.
+
+
+## Resposta HTTP 200 inconsistente e CORS
+
+Na investigação da busca festa/categoria 31, a resposta anexada tinha `local` vazio, estabelecimentos em estados incompatíveis com a região informada e preços fora da faixa retornada. Chamadas diretas reproduziram HTTP 200 sem Access-Control-Allow-Origin e com local vazio, inclusive com cabeçalhos semelhantes aos da aplicação oficial. Isso não identifica a causa da resposta na origem; HTTP 200 por si só não comprova que os dados sejam utilizáveis.
+
+Quando o navegador permite ler uma resposta inconsistente, o site retorna `PARANA_RESPONSE_INCONSISTENT` com mensagem específica, antes de gravar histórico. Se o navegador bloqueia a leitura por CORS, o corpo não é processado nem gravado; o painel de desenvolvimento pode exibir conteúdo ao qual o JavaScript não teve acesso. A correção do cabeçalho CORS depende do serviço de origem.

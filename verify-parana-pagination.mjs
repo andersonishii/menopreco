@@ -3,8 +3,8 @@ import {registerHooks} from 'node:module';
 registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
 const {paranaPage,restoredParanaOffset}=await import('./lib/parana-response.ts');
 assert.deepEqual(paranaPage(0,{produtos:Array(32),total:217}),{nextOffset:50,hasMore:true});
-assert.deepEqual(paranaPage(50,{produtos:Array(32),total:'217'}),{nextOffset:100,hasMore:true});
-assert.deepEqual(paranaPage(100,{produtos:Array(30),total:217}),{nextOffset:150,hasMore:true});
+assert.deepEqual(paranaPage(50,{produtos:Array(32),total:'217'}),{nextOffset:100,hasMore:false});
+assert.deepEqual(paranaPage(100,{produtos:Array(30),total:217}),{nextOffset:150,hasMore:false});
 assert.deepEqual(paranaPage(200,{produtos:Array(7),total:217}),{nextOffset:250,hasMore:false});
 assert.equal(paranaPage(0,{produtos:[{}],sourceCount:50,total:100}).hasMore,true);
 assert.equal(paranaPage(0,{produtos:[],total:0}).hasMore,false);
@@ -20,7 +20,7 @@ globalThis.fetch=async(url,init)=>{
  const offset=Number(query.searchParams.get('offset'));offsets.push(offset);
  assert.equal(query.searchParams.get('ordem'),'2');assert.equal(query.searchParams.get('raio'),'7');
  assert.equal(init.headers['x-search-grant'],undefined);
- return Response.json({local:'6gkzqf9vb',total:117,produtos:Array.from({length:offset===100?7:32},(_,index)=>({id:offset+':'+index,gtin:'7909989354513',valor:'10'}))});
+ return Response.json({local:'6gkzqf9vb',total:117,produtos:Array.from({length:offset===100?7:offset===50?50:32},(_,index)=>({id:offset+':'+index,gtin:'7909989354513',valor:'10'}))});
 };
 let offset=0,more=true;
 while(more){const data=await(await creditFetch('/api/produtos?local=6gkzqf9vb&raio=7&gtin=7909989354513&ordem=2&offset='+offset)).json();const page=paranaPage(offset,data);offset=page.nextOffset;more=page.hasMore;assert.ok(offset<=150);}
@@ -35,3 +35,10 @@ assert.equal(restoredParanaOffset({paginationVersion:1,lastLoadedOffset:46},true
 assert.equal(restoredParanaOffset({paginationVersion:1,lastLoadedOffset:null},true),50);
 assert.equal(restoredParanaOffset({},false),0);
 console.log('PASS: first continuation is 50 for fresh and legacy caches; verified completed pages alone restore 100 or 150.');
+
+assert.equal(paranaPage(50,{produtos:[{}],sourceCount:50,total:217}).hasMore,true);
+assert.equal(paranaPage(50,{produtos:[{}],sourceCount:49,total:217}).hasMore,false);
+assert.equal(paranaPage(50,{produtos:Array(49)}).hasMore,false);
+assert.equal(paranaPage(50,{produtos:Array(50),total:100}).hasMore,false);
+assert.equal(paranaPage(50,{produtos:Array(50),total:101}).hasMore,true);
+console.log('PASS: additional pages with fewer than 50 raw offers stop pagination, regardless of total; grouping never changes the raw count.');

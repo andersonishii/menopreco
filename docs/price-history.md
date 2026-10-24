@@ -72,3 +72,8 @@ A URL é montada da mesma forma no servidor e no navegador. O Accept dos produto
 ## Mudança de ordenação nos resultados do Paraná
 
 Ao trocar um filtro oficial (0 preço crescente, 1 distância, 2 data da venda, 3 preço decrescente), a busca de produtos reinicia em offset 0 com a ordem escolhida e o crédito existente. As próximas páginas mantêm essa ordem. Faixa de preço e cursor são reiniciados com a nova consulta. Desconto e quantidade de ofertas continuam locais. A oferta destacada e a ordenação interna de cada GTIN passam a acompanhar também preço decrescente e data da venda, em vez de selecionar sempre a oferta mais barata.
+
+
+## Encerramento por página adicional parcial
+
+Por solicitação do usuário, uma página adicional (offset 50 ou maior) com menos de 50 ofertas recebidas da API encerra a paginação, mesmo se `total` indicar mais resultados. A contagem usa `sourceCount` anterior ao agrupamento e à filtragem de notas; uma página cheia não vira parcial apenas porque menos ofertas ficaram visíveis. A primeira página mantém o comportamento anterior, permitindo carregar offset 50 mesmo se a resposta inicial tiver menos de 50 ofertas. O total continua encerrando uma página cheia quando o limite já foi atingido. A API já apresentou páginas parciais com total maior nos testes anteriores; esta é uma regra de encerramento do site, não uma garantia geral sobre o comportamento da API.

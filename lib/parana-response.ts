@@ -18,7 +18,7 @@ export function assertParanaProducts(data:unknown,local:string,gtin?:string|null
 export function paranaPage(offset:number,data:{produtos:unknown[];total?:unknown;sourceCount?:number}){
  const nextOffset=paranaOffset(offset)+50,count=data.sourceCount??data.produtos.length;
  const total=typeof data.total==='number'||typeof data.total==='string'&&/^\d+$/.test(data.total)?Number(data.total):null;
- return{nextOffset,hasMore:count>0&&(total!==null&&Number.isSafeInteger(total)&&total>=0?nextOffset<total:true)};
+ return{nextOffset,hasMore:count>0&&(offset===0||count>=50)&&(total!==null&&Number.isSafeInteger(total)&&total>=0?nextOffset<total:true)};
 }
 
 export type ParanaPriceRange={min:string;max:string};

@@ -1,4 +1,5 @@
 "use client";
+import {latestStoreOffers} from '../lib/latest-offers';
 import {recentFuelOffers,fuelWithinRadius,fuelPriceDistanceOrder} from '../lib/fuel-order';
 import OfferPrice from './offer-price';
 import {offerPrice,discountOrder} from '../lib/offer-price';
@@ -17,13 +18,13 @@ export default function FuelSearch({local,cityName,onBusy,radius=7,cacheOwner,se
  const [restoredAt,setRestoredAt]=useState(0);
  const canDistance=hasDeviceLocation(searchLocation);
  useEffect(()=>{if(!canDistance){if(order==='1')setOrder('recent-day');if(requestOrder==='1')setRequestOrder('2');}},[canDistance,order,requestOrder]);
- useSavedResults(cacheOwner?'fuel:'+cacheOwner+':'+local+':'+radius:null,{fuel,order,offers,searched,offset,more,requestOrder},(saved,at)=>{if(!Array.isArray(saved.offers)||!fuels.some(f=>f[0]===saved.fuel)||!orders.some(o=>o[0]===saved.order))return;setFuel(saved.fuel);setOrder(saved.order==='1'&&!canDistance?'recent-day':saved.order);setRequestOrder(saved.requestOrder==='1'&&!canDistance?'2':['0','1','2','3'].includes(saved.requestOrder)?saved.requestOrder:'2');setOffers(saved.offers);setSearched(!!saved.searched);setOffset(saved.offset||0);setMore(!!saved.more);setRestoredAt(at);},!busy);
+ useSavedResults(cacheOwner?'fuel:'+cacheOwner+':'+local+':'+radius:null,{fuel,order,offers,searched,offset,more,requestOrder},(saved,at)=>{if(!Array.isArray(saved.offers)||!fuels.some(f=>f[0]===saved.fuel)||!orders.some(o=>o[0]===saved.order))return;setFuel(saved.fuel);setOrder(saved.order==='1'&&!canDistance?'recent-day':saved.order);setRequestOrder(saved.requestOrder==='1'&&!canDistance?'2':['0','1','2','3'].includes(saved.requestOrder)?saved.requestOrder:'2');setOffers(latestStoreOffers(saved.offers));setSearched(!!saved.searched);setOffset(saved.offset||0);setMore(!!saved.more);setRestoredAt(at);},!busy);
  async function load(next=0,selectedOrder=order){if(busy)return;setRestoredAt(0);setBusy(true);onBusy(true);setError('');setSearched(true);if(!next){setOffers([]);setMore(false);setOffset(0);}try{
  const params=new URLSearchParams({...locationParams(searchLocation||{name:cityName,geohash:local}),local,raio:String(radius),data:'3',ordem:next?requestOrder:selectedOrder==='recent-day'?'2':selectedOrder==='discount'?'0':selectedOrder,tp_comb:fuel,offset:String(next)});
  if(!next)setRequestOrder(params.get('ordem')||'0');
- let data:{produtos?:FuelOffer[]}|undefined;let failure:unknown;
+ let data:{produtos?:FuelOffer[];sourceCount?:number}|undefined;let failure:unknown;
  for(const url of [productEndpoint(searchLocation||{name:cityName,geohash:local})+'?'+params]){try{const response=await creditFetch(url);const body=await response.json();if(!response.ok||!Array.isArray(body.produtos))throw new Error(body.error||'Resposta inválida do serviço de preços.');data=body;break;}catch(e){failure=e;}}
- if(!data)throw failure;const products=data.produtos!;setOffers(old=>next?[...old,...products.filter(p=>!old.some(o=>o.id===p.id))]:products);setOffset(next+products.length);setMore((!searchLocation?.uf||searchLocation.uf==='PR')&&products.length>0);
+ if(!data)throw failure;const products=data.produtos!;setOffers(old=>latestStoreOffers(next?[...old,...products.filter(p=>!old.some(o=>o.id===p.id))]:products));const sourceCount=data.sourceCount??products.length;setOffset(next+sourceCount);setMore((!searchLocation?.uf||searchLocation.uf==='PR')&&sourceCount>0);
  }catch(e){setError(e instanceof Error?e.message:'Não foi possível consultar os combustíveis. Tente novamente.');}finally{setBusy(false);onBusy(false);}}
  function changeOrder(value:string){setOrder(value);}
  const visibleOffers=fuelWithinRadius(offers,radius);

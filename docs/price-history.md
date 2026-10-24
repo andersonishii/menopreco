@@ -25,3 +25,7 @@ Após o deploy, novas consultas começam a alimentar o histórico. O cache exist
 `supabase/verify-price-history.sql`: insert idempotente, preço anterior cronológico, isolamento por loja, reconhecimento de oferta antiga, RLS e privilégios, com rollback dos registros sintéticos.
 
 Também foram verificadas as buscas do Paraná, buscas nacionais, autenticação/créditos, ordenação de ofertas, lista de compras e combustíveis. A produção do site depende do deploy no Render; a estrutura do banco já está pronta.
+
+## Ofertas exibidas
+
+Todas as notas válidas retornadas pela API são enviadas ao histórico antes da filtragem. A lista de ofertas mostra somente o registro de data/hora mais recente por GTIN e estabelecimento, mesmo se uma nota anterior tiver preço menor. Registros empatados exatamente na data/hora são preservados. Não se misturam lojas diferentes nem se agrupam produtos apenas pelo nome. A filtragem também se aplica à combinação de páginas e restauração dos resultados de produtos. A paginação avança pela quantidade original da API, não pela quantidade reduzida exibida.

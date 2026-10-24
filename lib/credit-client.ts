@@ -5,8 +5,9 @@ const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'
 export async function creditFetch(url:string,reset=false):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(reset)grants.delete(scope);if(!grants.has(scope)){
  const run=queue.then(async()=>{if(grants.has(scope))return;const r=await fetch('/api/credits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),params:Object.fromEntries(target.searchParams)})});const data=await r.json();window.dispatchEvent(new CustomEvent('credits-changed'));if(!r.ok){if(data.code==='MPBR_CONNECTION_REQUIRED')window.dispatchEvent(new CustomEvent('mpbr-connection-required'));if(r.status===402||r.status===401)window.dispatchEvent(new CustomEvent('account-required'));throw new Error(data.error||'Não foi possível iniciar a consulta.');}grants.set(scope,data.grant);});queue=run.catch(()=>{});await run;
  }
- // Reserve the credit on our server before using the browser connection.
- if(target.searchParams.get('expand')!=='1'&&(target.pathname==='/api/categorias'||target.pathname==='/api/produtos')){
+ // Product responses go through our server so shared history contains only upstream data.
+ // Category browsing may still use the browser connection after reserving the credit.
+ if(target.searchParams.get('expand')!=='1'&&target.pathname==='/api/categorias'){
   const upstream=new URL('https://menorpreco.notaparana.pr.gov.br/api/v1/'+target.pathname.split('/').pop());upstream.search=target.search;
   try{const direct=await fetch(upstream.toString(),{headers:{Accept:'application/json'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(12000)});if(direct.ok){const body=await direct.clone().json();if(Array.isArray(body.categorias)||Array.isArray(body.produtos))return direct;}}catch{/* Network/CORS failures use our server with the same credit grant. */}
  }

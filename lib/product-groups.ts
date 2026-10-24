@@ -1,7 +1,8 @@
+import type {PriceHistory} from './price-history';
 import {uniqueOffers} from './description-offers';
 import {offerPrice} from './offer-price';
 import type {Store} from './offer-details';
-export type Offer={id:string;gtin?:string;desc:string;tempo:string;datahora?:string;valor_tabela:string;valor?:string;valor_desconto?:string;distkm:string;estabelecimento:Store};
+export type Offer={priceHistory?:PriceHistory;historyUnavailable?:boolean;id:string;gtin?:string;desc:string;tempo:string;datahora?:string;valor_tabela:string;valor?:string;valor_desconto?:string;distkm:string;estabelecimento:Store};
 export function groupOffers(offers:Offer[]){
  const groups=new Map<string,{key:string;gtin:string|null;offers:Offer[]}>();
  for(const offer of uniqueOffers(offers)){const code=String(offer.gtin??'').trim();const gtin=/^(\d{8}|\d{12,14})$/.test(code)&&!/^0+$/.test(code)?code.padStart(14,'0'):null;const key=gtin??'offer:'+offer.id;let group=groups.get(key);if(!group){group={key,gtin,offers:[]};groups.set(key,group);}group.offers.push(offer);}

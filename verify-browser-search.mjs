@@ -17,3 +17,8 @@ console.log('OK: navegador primeiro, CORS usa servidor sem outro crédito, nenhu
 
 clearGrants();let expansionCredits=0,expansionRequests=0;globalThis.fetch=async url=>{if(url==='/api/credits'){expansionCredits++;return Response.json({grant:'description-grant'});}assert.ok(String(url).startsWith('/api/produtos?'));expansionRequests++;return Response.json({produtos:[]});};
 await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&expand=1');await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&offset=20&expand=1');assert.equal(expansionCredits,1);assert.equal(expansionRequests,2);console.log('PASS: enriquecimento no servidor e paginação usam o mesmo crédito da descrição.');
+
+clearGrants();let historyProductCalls=0;
+globalThis.fetch=async(url,init)=>{if(url==='/api/credits')return Response.json({grant:'history-grant'});assert.ok(String(url).startsWith('/api/produtos?'));assert.equal(init.headers['x-search-grant'],'history-grant');historyProductCalls++;return Response.json({produtos:[]});};
+await creditFetch('/api/produtos?local=6gf0ffq61&gtin=7891234567895&raio=5');assert.equal(historyProductCalls,1);
+console.log('PASS: produtos passam pelo servidor para gravar histórico confiável, sem receber preços enviados pelo navegador.');

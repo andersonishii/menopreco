@@ -30,7 +30,7 @@ for(const scenario of ['barcode','description','invalid','offline','auth','proce
    if(scenario==='offline')throw new TypeError('CORS');
    return Response.json({local:scenario==='invalid'?'':local,produtos:[{gtin,desc:'Kinder',valor:'5.99'}]});
   }
-  return Response.json({error:'Consulta indisponÌvel',code:scenario==='processing'?'PARANA_PROCESSING_FAILED':'PARANA_UPSTREAM_UNAVAILABLE'},{status:scenario==='auth'?403:502});
+  return Response.json({error:'Consulta indispon√≠vel',code:scenario==='processing'?'PARANA_PROCESSING_FAILED':'PARANA_UPSTREAM_UNAVAILABLE'},{status:scenario==='auth'?403:502});
  };
  const query=['barcode','invalid','offline','national'].includes(scenario)?'gtin='+gtin:'termo=kinder&categoria=1';
  const result=await creditFetch('/api/produtos?local='+local+'&'+query+'&ordem=0'+(scenario==='national'?'&uf=SC':''));
@@ -39,7 +39,7 @@ for(const scenario of ['barcode','description','invalid','offline','auth','proce
  assert.equal(credits,1);assert.equal(directCalls,['auth','processing','national'].includes(scenario)?0:1);
  if(recovered){const body=await result.json();assert.equal(body.sourceCount,1);assert.equal(body.produtos[0].historyUnavailable,true);}
 }
-console.log('PASS: recuperaÁ„o PR validada, sem novo crÈdito ou credenciais externas; falhas de autorizaÁ„o, processamento e outros estados n„o usam recuperaÁ„o.');
+console.log('PASS: recupera√ß√£o PR validada, sem novo cr√©dito ou credenciais externas; falhas de autoriza√ß√£o, processamento e outros estados n√£o usam recupera√ß√£o.');
 
 for(const scenario of ['found','empty','blocked','wrong-gtin']){
  clearGrants();let credits=0,direct=0,server=0;
@@ -64,7 +64,7 @@ for(const order of ['0','1','2','3']){
   if(url==='/api/credits')return Response.json({grant:'private'});
   const target=new URL(url);assert.equal(target.origin,'https://menorpreco.notaparana.pr.gov.br');
   assert.equal(target.searchParams.get('ordem'),order);assert.equal(target.searchParams.get('data'),'3');
-  assert.equal(target.searchParams.get('offset'),'40');assert.equal(target.searchParams.get('raio'),'7');productCalls++;
+  assert.equal(target.searchParams.get('offset'),'50');assert.equal(target.searchParams.get('raio'),'7');productCalls++;
   return Response.json({local:'6gkzqf9vb',produtos:[]});
  };
  assert.equal((await creditFetch('/api/produtos?local=6gkzqf9vb&raio=7&gtin=7909989354513&offset=40&data=-1&ordem='+order)).status,200);

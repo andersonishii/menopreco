@@ -1,5 +1,5 @@
 "use client";
-import {assertParanaProducts} from './parana-response';
+import {assertParanaProducts,paranaOffset,paranaBusyResponse} from './parana-response';
 import {latestStoreOffers} from './latest-offers';
 const grants=new Map<string,string>();
 let queue:Promise<unknown>=Promise.resolve();
@@ -7,13 +7,13 @@ const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'
 async function directParanaProducts(target:URL):Promise<Response|undefined>{
  const upstream=new URL('https://menorpreco.notaparana.pr.gov.br/api/v1/produtos');upstream.search=target.search;upstream.searchParams.delete('expand');
  const response=await fetch(upstream.toString(),{headers:{Accept:'application/json'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(12000)});
- if(!response.ok)return;
+ if(!response.ok)return (await paranaBusyResponse(response))||undefined;
  const data=await response.json();assertParanaProducts(data,target.searchParams.get('local')||'',target.searchParams.get('gtin'));
  // Browser prices are not submitted to the shared price history.
  const produtos=latestStoreOffers(data.produtos.map(offer=>({...offer,historyUnavailable:true})));
  return Response.json({...data,sourceCount:data.produtos.length,produtos},{headers:{'Cache-Control':'no-store'}});
 }
-export async function creditFetch(url:string,reset=false):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(target.pathname==='/api/produtos'&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR')){target.searchParams.set('data','3');}if(reset)grants.delete(scope);if(!grants.has(scope)){
+export async function creditFetch(url:string,reset=false):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(target.pathname==='/api/produtos'&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR')){target.searchParams.set('data','3');if(target.searchParams.has('offset'))target.searchParams.set('offset',String(paranaOffset(target.searchParams.get('offset'))));}if(reset)grants.delete(scope);if(!grants.has(scope)){
  const run=queue.then(async()=>{if(grants.has(scope))return;const r=await fetch('/api/credits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),params:Object.fromEntries(target.searchParams)})});const data=await r.json();window.dispatchEvent(new CustomEvent('credits-changed'));if(!r.ok){if(data.code==='MPBR_CONNECTION_REQUIRED')window.dispatchEvent(new CustomEvent('mpbr-connection-required'));if(r.status===402||r.status===401)window.dispatchEvent(new CustomEvent('account-required'));throw new Error(data.error||'Não foi possível iniciar a consulta.');}grants.set(scope,data.grant);});queue=run.catch(()=>{});await run;
  }
  // Reserve access before calling the public API. A valid barcode result, including

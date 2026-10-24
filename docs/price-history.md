@@ -55,3 +55,8 @@ Após reservar o crédito, buscas por GTIN no Paraná consultam primeiro a API o
 
 
 Na busca por descrição do Paraná, a primeira página após a categoria não envia faixa de preço. Os valores válidos de `precos.min` e `precos.max` dessa resposta são preservados nas próximas páginas como `valor_min` e `valor_max`, inclusive ao restaurar o cache. Uma nova busca, categoria, região ou modo reinicia a faixa. Dados ausentes ou inválidos não são usados como limites.
+
+
+## Indisponibilidade e retomada da paginação
+
+Respostas 429/503 e erros 500 com `es_rejected_execution_exception` são tratados como sobrecarga temporária do Nota Paraná. O site retorna uma mensagem legível (503, `PARANA_UPSTREAM_BUSY`, Retry-After de 10 segundos) sem repetir imediatamente a consulta por outro caminho. A tentativa manual usa a mesma página e o crédito existente. Ofertas já carregadas permanecem na tela. Offsets antigos restaurados do cache são alinhados para a próxima posição múltipla de 50 (por exemplo, 46 passa a 50), sem apagar os resultados salvos. Essa proteção não elimina a indisponibilidade da API externa.

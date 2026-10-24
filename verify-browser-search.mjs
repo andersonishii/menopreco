@@ -33,7 +33,7 @@ for(const scenario of ['barcode','description','invalid','offline','auth','proce
   return Response.json({error:'Consulta indisponível',code:scenario==='processing'?'PARANA_PROCESSING_FAILED':'PARANA_UPSTREAM_UNAVAILABLE'},{status:scenario==='auth'?403:502});
  };
  const query=['barcode','invalid','offline','national'].includes(scenario)?'gtin='+gtin:'termo=kinder&categoria=1';
- const result=await creditFetch('/api/produtos?local='+local+'&'+query+(scenario==='national'?'&uf=SC':''));
+ const result=await creditFetch('/api/produtos?local='+local+'&'+query+'&ordem=0'+(scenario==='national'?'&uf=SC':''));
  const recovered=['barcode','description'].includes(scenario);
  assert.equal(result.status,recovered?200:scenario==='auth'?403:502);
  assert.equal(credits,1);assert.equal(directCalls,['auth','processing','national'].includes(scenario)?0:1);
@@ -57,3 +57,17 @@ for(const scenario of ['found','empty','blocked','wrong-gtin']){
  const data=await result.json();assert.equal(data.produtos.length,scenario==='found'?1:0);
 }
 console.log('PASS: valid barcode and zero results use one official request; CORS and wrong GTIN use the server once with the same credit.');
+
+for(const order of ['0','1','2','3']){
+ clearGrants();let productCalls=0;
+ globalThis.fetch=async(url,init)=>{
+  if(url==='/api/credits')return Response.json({grant:'private'});
+  const target=new URL(url);assert.equal(target.origin,'https://menorpreco.notaparana.pr.gov.br');
+  assert.equal(target.searchParams.get('ordem'),order);assert.equal(target.searchParams.get('data'),'3');
+  assert.equal(target.searchParams.get('offset'),'40');assert.equal(target.searchParams.get('raio'),'7');productCalls++;
+  return Response.json({local:'6gkzqf9vb',produtos:[]});
+ };
+ assert.equal((await creditFetch('/api/produtos?local=6gkzqf9vb&raio=7&gtin=7909989354513&offset=40&data=-1&ordem='+order)).status,200);
+ assert.equal(productCalls,1);
+}
+console.log('PASS: all four official barcode orders are preserved, including pagination and radius.');

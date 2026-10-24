@@ -12,7 +12,7 @@ export async function GET(request:Request){
  if(!['0','1','2','3'].includes(ordem)||!/^\d+$/.test(offset))return Response.json({error:'Página ou ordenação inválida.'},{status:400});
  if(fuel!==null&&!['1','2','3','4','5'].includes(fuel))return Response.json({error:'Combustível inválido.'},{status:400});
  if(fuel===null&&(gtin?!/^(\d{8}|\d{12,14})$/.test(gtin):(!termo||termo.length>120||!categoria||!/^\d+$/.test(categoria))))return Response.json({error:'Código de barras ou descrição e categoria inválidos.'},{status:400});
- const params=new URLSearchParams({local,raio,offset,data:'3',ordem:fuel?ordem:'0',...(fuel?{tp_comb:fuel}:gtin?{gtin}:{termo:termo!,categoria:categoria!})});
+ const params=new URLSearchParams({local,raio,offset,data:'3',ordem,...(fuel?{tp_comb:fuel}:gtin?{gtin}:{termo:termo!,categoria:categoria!})});
  try{await requireSearch(request);}catch(e){return fail(e);}
  let stage='upstream',upstreamStatus:number|undefined;
  try{

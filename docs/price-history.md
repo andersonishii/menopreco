@@ -46,7 +46,7 @@ Nessa recuperação, a lista continua selecionando a nota mais recente por produ
 
 ## Parâmetros de produtos no Paraná
 
-Buscas por descrição com categoria e por código de barras usam `/api/v1/produtos` com `data=3` e `ordem=0`, tanto no servidor quanto na recuperação pelo navegador. Localização, raio, categoria, GTIN e paginação permanecem os escolhidos na busca. A ordenação visual continua aplicada aos resultados carregados. Combustíveis mantêm suas ordenações existentes.
+Buscas por descrição com categoria e por código de barras usam `/api/v1/produtos` com `data=3` e a ordenação solicitada: `0` menor preço, `1` menor distância, `2` data da venda, `3` maior preço. Isso vale tanto no servidor quanto na consulta direta e recuperação pelo navegador. Localização, raio, categoria, GTIN e paginação permanecem os escolhidos na busca. A ordenação visual continua aplicada aos resultados carregados. Combustíveis mantêm suas ordenações existentes.
 
 
 ## Código de barras: consulta direta no Paraná

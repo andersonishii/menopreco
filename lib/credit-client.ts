@@ -12,7 +12,7 @@ async function directParanaProducts(target:URL):Promise<Response|undefined>{
  const produtos=latestStoreOffers(data.produtos.map(offer=>({...offer,historyUnavailable:true})));
  return Response.json({...data,sourceCount:data.produtos.length,produtos},{headers:{'Cache-Control':'no-store'}});
 }
-export async function creditFetch(url:string,reset=false):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(target.pathname==='/api/produtos'&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR')){target.searchParams.set('data','3');if(target.searchParams.has('offset'))target.searchParams.set('offset',String(paranaOffset(target.searchParams.get('offset'))));}if(reset)grants.delete(scope);if(!grants.has(scope)){
+export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state:'waiting'|'retrying'|'done')=>void):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(target.pathname==='/api/produtos'&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR')){target.searchParams.set('data','3');if(target.searchParams.has('offset'))target.searchParams.set('offset',String(paranaOffset(target.searchParams.get('offset'))));}if(reset)grants.delete(scope);if(!grants.has(scope)){
  const run=queue.then(async()=>{if(grants.has(scope))return;const r=await fetch('/api/credits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),params:Object.fromEntries(target.searchParams)})});const data=await r.json();window.dispatchEvent(new CustomEvent('credits-changed'));if(!r.ok){if(data.code==='MPBR_CONNECTION_REQUIRED')window.dispatchEvent(new CustomEvent('mpbr-connection-required'));if(r.status===402||r.status===401)window.dispatchEvent(new CustomEvent('account-required'));throw new Error(data.error||'Não foi possível iniciar a consulta.');}grants.set(scope,data.grant);});queue=run.catch(()=>{});await run;
  }
  // Reserve access before calling the public API. A valid barcode result, including
@@ -24,7 +24,20 @@ export async function creditFetch(url:string,reset=false):Promise<Response>{cons
   const upstream=new URL('https://menorpreco.notaparana.pr.gov.br/api/v1/'+target.pathname.split('/').pop());upstream.search=target.search;
   try{const direct=await fetch(upstream.toString(),{headers:{Accept:'application/json'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(12000)});if(direct.ok){const body=await direct.clone().json();if(Array.isArray(body.categorias)||Array.isArray(body.produtos))return direct;}}catch{/* Network/CORS failures use our server with the same credit grant. */}
  }
- const response=await fetch(target.pathname+target.search,{headers:{'x-search-grant':grants.get(scope)!},signal:AbortSignal.timeout(target.searchParams.get('expand')==='1'?180000:30000)});if(response.status===401||response.status===403){grants.delete(scope);window.dispatchEvent(new CustomEvent('account-required'));}if(response.status===428)window.dispatchEvent(new CustomEvent('mpbr-connection-required'));
+ let response=await fetch(target.pathname+target.search,{headers:{'x-search-grant':grants.get(scope)!},signal:AbortSignal.timeout(target.searchParams.get('expand')==='1'?180000:30000)});if(response.status===401||response.status===403){grants.delete(scope);window.dispatchEvent(new CustomEvent('account-required'));}if(response.status===428)window.dispatchEvent(new CustomEvent('mpbr-connection-required'));
+ // Exactly one delayed retry for the categories service failure, using this grant.
+ if(target.pathname==='/api/categorias'&&response.status===502){
+  const failure=await response.clone().json().catch(()=>null);
+  if(failure?.code==='PARANA_CATEGORIES_UNAVAILABLE'||failure?.error==='Não foi possível consultar as categorias no Nota Paraná. Tente novamente em instantes.'){
+   try{
+    const retryGrant=grants.get(scope);onCategoryRetry?.('waiting');await new Promise<void>(resolve=>setTimeout(resolve,6000));
+    if(retryGrant&&grants.get(scope)===retryGrant){
+     onCategoryRetry?.('retrying');response=await fetch(target.pathname+target.search,{headers:{'x-search-grant':retryGrant},signal:AbortSignal.timeout(30000)});
+     if(response.status===401||response.status===403){grants.delete(scope);window.dispatchEvent(new CustomEvent('account-required'));}
+    }
+   }finally{onCategoryRetry?.('done');}
+  }
+ }
  // Recover only upstream failures, never account, credit or authorization failures.
  if(!browserBarcode&&target.pathname==='/api/produtos'&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR')&&response.status===502){
   const failure=await response.clone().json().catch(()=>null);

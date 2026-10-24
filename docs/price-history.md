@@ -77,3 +77,8 @@ Ao trocar um filtro oficial (0 preço crescente, 1 distância, 2 data da venda, 
 ## Encerramento por página adicional parcial
 
 Por solicitação do usuário, uma página adicional (offset 50 ou maior) com menos de 50 ofertas recebidas da API encerra a paginação, mesmo se `total` indicar mais resultados. A contagem usa `sourceCount` anterior ao agrupamento e à filtragem de notas; uma página cheia não vira parcial apenas porque menos ofertas ficaram visíveis. A primeira página mantém o comportamento anterior, permitindo carregar offset 50 mesmo se a resposta inicial tiver menos de 50 ofertas. O total continua encerrando uma página cheia quando o limite já foi atingido. A API já apresentou páginas parciais com total maior nos testes anteriores; esta é uma regra de encerramento do site, não uma garantia geral sobre o comportamento da API.
+
+
+## Nova tentativa na busca de categorias
+
+Um 502 da rota de categorias com código `PARANA_CATEGORIES_UNAVAILABLE` (ou a mensagem equivalente de uma versão anterior) aciona uma única repetição após 6 segundos. A tela mantém a pesquisa em andamento e anuncia a espera e a nova tentativa com uma região de status acessível. A repetição usa os mesmos parâmetros e grant, sem reservar outro crédito. Erros de autenticação, resultados vazios válidos e outros tipos de erro não entram nessa regra. Uma segunda falha é apresentada normalmente; não há loop. Se o grant for limpo durante a espera, a repetição não é enviada.

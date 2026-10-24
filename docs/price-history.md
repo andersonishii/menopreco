@@ -67,3 +67,8 @@ Respostas 429/503 e erros 500 com `es_rejected_execution_exception` são tratado
 Na busca padrão por descrição no Paraná, a consulta de produtos usa `local`, `termo`, `categoria`, `offset=0`, `raio`, `data=3` e `ordem=0`, sem limites de preço na primeira página. A opção visual de menor preço do dia continua aplicada localmente. Seleções explícitas de distância, data da venda ou maior preço preservam os códigos oficiais 1, 2 e 3. As próximas páginas mantêm a ordem da consulta original. Consultas já salvas mantêm sua ordem anterior até uma nova busca, evitando misturar páginas ordenadas por critérios diferentes.
 
 A URL é montada da mesma forma no servidor e no navegador. O Accept dos produtos é `application/json, text/plain, */*`. Cabeçalhos de origem do navegador não são forjados: a chamada do Preço Perto continua tendo origem diferente da aplicação oficial. Localização e raio são os valores escolhidos pelo usuário. O teste automatizado compara literalmente a URL com o exemplo oficial fornecido para feminino/categoria 37/local 6gkzqf9vb/raio 7.
+
+
+## Mudança de ordenação nos resultados do Paraná
+
+Ao trocar um filtro oficial (0 preço crescente, 1 distância, 2 data da venda, 3 preço decrescente), a busca de produtos reinicia em offset 0 com a ordem escolhida e o crédito existente. As próximas páginas mantêm essa ordem. Faixa de preço e cursor são reiniciados com a nova consulta. Desconto e quantidade de ofertas continuam locais. A oferta destacada e a ordenação interna de cada GTIN passam a acompanhar também preço decrescente e data da venda, em vez de selecionar sempre a oferta mais barata.

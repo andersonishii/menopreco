@@ -16,3 +16,11 @@ const closest=groupOffers([farCheap,nearby]).map(g=>({...g,offers:[...g.offers].
 assert.equal(closest[0].offers[0].id,'near');
 assert.equal(distancePriceOrder(missing,{...missing}),0);
 console.log('PASS: menor distância, empate na precisão exibida, distância ausente e oferta destacada.');
+
+const {orderProductOffers}=await import('./lib/product-groups.ts');
+const dated=[{...offer('cheap','7896290300295','5'),datahora:'2026-10-23T20:00:00Z'},{...offer('expensive','7896290300295','20'),datahora:'2026-10-23T21:00:00Z'},{...offer('latest','7896290300295','10'),datahora:'2026-10-24T12:00:00Z'}];
+assert.deepEqual(orderProductOffers(dated,'0').map(o=>o.id),['cheap','latest','expensive']);
+assert.deepEqual(orderProductOffers(dated,'3').map(o=>o.id),['expensive','latest','cheap']);
+assert.deepEqual(orderProductOffers(dated,'2').map(o=>o.id),['latest','expensive','cheap']);
+assert.deepEqual(dated.map(o=>o.id),['cheap','expensive','latest']);
+console.log('PASS: displayed offer matches lowest price, highest price or latest sale without mutating loaded offers.');

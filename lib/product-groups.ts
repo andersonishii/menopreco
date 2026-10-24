@@ -35,3 +35,8 @@ export function distanceToleranceOrder<T extends {distkm:string;valor_tabela?:st
   return roundedA===roundedB?(price(a)-price(b))||0:roundedA<roundedB?-1:1;
  });
 }
+
+// Choose the representative offer using the same criterion as the result order.
+export function orderProductOffers(offers:Offer[],order:string){
+ return [...offers].sort((a,b)=>order==='3'?offerPrice(b)-offerPrice(a):order==='2'?(Date.parse(b.datahora||'')||0)-(Date.parse(a.datahora||'')||0)||offerPrice(a)-offerPrice(b):offerPrice(a)-offerPrice(b));
+}

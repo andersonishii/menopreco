@@ -33,5 +33,5 @@ try{for(const barcode of [true,false]){
  recover=true;assert.equal((await creditFetch(query)).status,200);assert.equal(credits,1);
  assert.equal(officialCalls,3);
 }}finally{globalThis.setTimeout=originalTimer;}
-assert.deepEqual(retryDelays,[8000,8000]);
+assert.deepEqual(retryDelays.filter(ms=>ms>=6000),[8000,8000]);
 console.log('PASS: stale offsets aligned, external overload sanitized as retryable 503, no immediate duplicate lookup, manual retry uses same page and one credit.');

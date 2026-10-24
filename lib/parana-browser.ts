@@ -1,3 +1,4 @@
+import {queueParanaRequest} from './parana-queue';
 import {assertParanaProducts,ParanaResponseError,paranaBusyResponse,paranaOffset,paranaPriceRange,paranaProductsUrl} from './parana-response';
 import {readDescriptionResponse} from './description-response';
 import {latestStoreOffers} from './latest-offers';
@@ -24,7 +25,7 @@ export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promis
   upstream=paranaProductsUrl(params);
  }
  try{
-  const response=await fetch(upstream,{headers:{Accept:'application/json, text/plain, */*'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(20000)});
+  const response=await queueParanaRequest(upstream,()=>fetch(upstream,{headers:{Accept:'application/json, text/plain, */*'},credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(20000)}));
   if(!response.ok){
    const busy=await paranaBusyResponse(response);if(busy){const headers=new Headers(busy.headers);if(response.status===500)headers.set('Retry-After','8');return Response.json({...await busy.json(),upstreamStatus:response.status},{status:busy.status,headers});}
    if(categories&&(response.status===401||response.status===403))return json({error:'O serviço do Nota Paraná recusou a consulta. Tente novamente mais tarde.',code:'PARANA_UPSTREAM_REJECTED'},502);

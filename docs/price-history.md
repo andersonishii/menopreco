@@ -113,3 +113,14 @@ Os testes `verify-client-history-server.mjs`, `verify-client-history-flow.mjs` e
 Na investigação da busca festa/categoria 31, a resposta anexada tinha `local` vazio, estabelecimentos em estados incompatíveis com a região informada e preços fora da faixa retornada. Chamadas diretas reproduziram HTTP 200 sem Access-Control-Allow-Origin e com local vazio, inclusive com cabeçalhos semelhantes aos da aplicação oficial. Isso não identifica a causa da resposta na origem; HTTP 200 por si só não comprova que os dados sejam utilizáveis.
 
 Quando o navegador permite ler uma resposta inconsistente, o site retorna `PARANA_RESPONSE_INCONSISTENT` com mensagem específica, antes de gravar histórico. Se o navegador bloqueia a leitura por CORS, o corpo não é processado nem gravado; o painel de desenvolvimento pode exibir conteúdo ao qual o JavaScript não teve acesso. A correção do cabeçalho CORS depende do serviço de origem.
+
+
+## Fila das consultas do Paraná
+
+Categorias, descrição, código de barras, lista e combustíveis compartilham uma fila para a API oficial no navegador. Há somente uma chamada em andamento e um intervalo mínimo de 2 segundos após o recebimento completo da resposta, antes da próxima chamada. O timeout de rede começa quando a chamada sai da fila. Os retries de 6/8 segundos passam pela mesma fila e mantêm o limite de uma tentativa automática.
+
+Pedidos da mesma URL em andamento (independentemente da ordem dos parâmetros) compartilham uma chamada externa; cada consumidor recebe uma cópia independente da resposta. Erros liberam a fila e permitem tentativas posteriores. Não há cache adicional de resultados nessa camada: o cache de 30 minutos existente permanece separado.
+
+Quando Web Locks está disponível, um bloqueio exclusivo coordena também abas da mesma origem. Apenas o instante da próxima chamada é compartilhado no localStorage, sem termos ou preços. Sem esse recurso, ou se o navegador recusar o bloqueio antes de executar a consulta, vale a fila local da aba. Requisições idênticas são consolidadas dentro da aba; abas diferentes são serializadas, mas não compartilham o corpo da resposta. O mecanismo não coordena navegadores/dispositivos diferentes no mesmo IP e não garante a remoção de bloqueios já aplicados pelo serviço externo.
+
+O histórico e as demais rotas do próprio site não entram nessa fila. Testes isolados verificam exclusão mútua, intervalo, leitura completa do corpo, consolidação, falhas e bloqueio entre duas filas. Um teste integrado executa chamadas concorrentes reais pelo creditFetch e confirma três chamadas oficiais para quatro solicitações, sem sobreposição e com os escopos de crédito preservados.

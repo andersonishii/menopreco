@@ -17,12 +17,12 @@ try{
    return Response.json(outcome==='overload'?{message:'[es_rejected_execution_exception] rejected execution'}:{error:'Internal Server Error'},{status:outcome==='second-502'&&calls===2?502:500});
   };
   const result=await creditFetch(path+'?local=6gkzqf9vb&raio=7&offset=0&ordem=3&'+query,false,(state,seconds)=>progress.push([state,seconds]));
-  assert.equal(credits,1);assert.equal(calls,outcome==='cancelled'?1:2);assert.deepEqual(delays,[8000]);assert.equal(result.status,outcome==='success'?200:outcome==='overload'?503:502);
+  assert.equal(credits,1);assert.equal(calls,outcome==='cancelled'?1:2);assert.deepEqual(delays.filter(ms=>ms>=6000),[8000]);assert.equal(result.status,outcome==='success'?200:outcome==='overload'?503:502);
   assert.deepEqual(progress,outcome==='cancelled'?[['waiting',8],['done',undefined]]:[['waiting',8],['retrying',undefined],['done',undefined]]);
  }
  clearGrants();let calls=0;const delays=[];
  globalThis.setTimeout=(resolve,ms)=>{delays.push(ms);queueMicrotask(resolve);return 0;};
  globalThis.fetch=async url=>{if(url==='/api/credits')return Response.json({grant:'national'});calls++;return Response.json({error:'Failure'},{status:500});};
- assert.equal((await creditFetch('/api/brasil/produtos?local=6gkzqf9vb&uf=SC&latitude=-27&longitude=-48&termo=arroz')).status,500);assert.equal(calls,1);assert.deepEqual(delays,[]);
+ assert.equal((await creditFetch('/api/brasil/produtos?local=6gkzqf9vb&uf=SC&latitude=-27&longitude=-48&termo=arroz')).status,500);assert.equal(calls,1);assert.deepEqual(delays.filter(ms=>ms>=6000),[]);
 }finally{globalThis.setTimeout=originalTimer;clearGrants();}
 console.log('PASS: original Parana HTTP 500 retries once at 8000 ms across categories/products/barcodes/fuel, including overload; same credit, progress, cancellation, no chained retries or changes to national routes.');

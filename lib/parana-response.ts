@@ -20,3 +20,14 @@ export function paranaPage(offset:number,data:{produtos:unknown[];total?:unknown
  const total=typeof data.total==='number'||typeof data.total==='string'&&/^\d+$/.test(data.total)?Number(data.total):null;
  return{nextOffset,hasMore:count>0&&(total!==null&&Number.isSafeInteger(total)&&total>=0?nextOffset<total:true)};
 }
+
+export type ParanaPriceRange={min:string;max:string};
+export function paranaPriceRange(value:unknown):ParanaPriceRange|null{
+ if(!value||typeof value!=='object')return null;
+ const {min,max}=value as {min?:unknown;max?:unknown};
+ const valid=(part:unknown)=>['string','number'].includes(typeof part)&&/^\d{1,7}(?:\.\d{1,3})?$/.test(String(part))&&Number(part)<=1000000;
+ return valid(min)&&valid(max)&&Number(min)<=Number(max)?{min:String(min),max:String(max)}:null;
+}
+export function paranaRangeParams(offset:number,range:ParanaPriceRange|null):Record<string,string>{
+ return offset>0&&range?{valor_min:range.min,valor_max:range.max}:{};
+}

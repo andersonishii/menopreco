@@ -52,3 +52,6 @@ Buscas por descrição com categoria e por código de barras usam `/api/v1/produ
 ## Código de barras: consulta direta no Paraná
 
 Após reservar o crédito, buscas por GTIN no Paraná consultam primeiro a API oficial no navegador. Uma resposta válida, inclusive sem ofertas, encerra a consulta sem chamar `/api/produtos` do site. Se houver falha de rede, CORS ou dados inconsistentes, há uma única tentativa pelo servidor, com o mesmo crédito; não há nova tentativa direta depois dela. Localização, GTIN e notas mais recentes continuam validados. Como os resultados diretos não passam pelo servidor, essas consultas não gravam nem consultam o histórico compartilhado e indicam histórico indisponível. Buscas por descrição e demais estados mantêm o fluxo anterior.
+
+
+Na busca por descrição do Paraná, a primeira página após a categoria não envia faixa de preço. Os valores válidos de `precos.min` e `precos.max` dessa resposta são preservados nas próximas páginas como `valor_min` e `valor_max`, inclusive ao restaurar o cache. Uma nova busca, categoria, região ou modo reinicia a faixa. Dados ausentes ou inválidos não são usados como limites.

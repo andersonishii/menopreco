@@ -24,8 +24,18 @@ assert.equal((await products(request('https://site.example/api/produtos?local=6g
 assert.equal(called.searchParams.get('gtin'),'7891234567895');
 console.log('PASS: descrição no Paraná não expande GTIN; consulta direta por código de barras preservada.');
 
-for(const payload of [{categorias:[]},{produtos:[]},{unexpected:true}]){
+for(const payload of [{produtos:[]},{unexpected:true},{produtos:[{id:'sample',desc:'Arroz',valor_tabela:'5.00'}],total:0}]){
  mock(()=>Response.json(payload));const response=await categories(request('https://site.example/api/categorias?local=6gkzq99z5j5f&termo=arroz'));
  assert.equal(response.status,502);assert.match((await response.json()).error,/Tente novamente/);
 }
-console.log('PASS: categorias ausentes ou vazias pedem nova tentativa, sem aceitar produtos como alternativa.');
+console.log('PASS: resposta inválida ou produtos inesperados continuam gerando erro de consulta.');
+
+for(const payload of [[],{categorias:[]},{tempo:49,local:'6gkzqf9vb',produtos:[],total:0,precos:{min:'',max:''}},{produtos:[],total:'0'}]){
+ mock(()=>Response.json(payload));const response=await categories(request('https://site.example/api/categorias?local=6gkzq99z5j5f&termo=kiiiimder'));
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{categorias:[]});
+}
+const {readDescriptionResponse}=await import('./lib/description-response.ts');
+assert.deepEqual(readDescriptionResponse({produtos:[],total:0}),{kind:'categories',categories:[]});
+assert.throws(()=>readDescriptionResponse({produtos:[],total:1}));
+assert.throws(()=>readDescriptionResponse({produtos:[],total:null}));
+console.log('PASS: zero resultado em categorias ou produtos é uma busca vazia válida, tanto no navegador quanto no servidor.');

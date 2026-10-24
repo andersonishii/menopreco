@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import {stripTypeScriptTypes} from 'node:module';
 const source=stripTypeScriptTypes(fs.readFileSync('lib/saved-results.ts','utf8')).replace(/^import .*;$/gm,'').replace(/export /g,'');
-const storage=new Map();const localStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)};
+const storage=new Map();const localStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)};
 const {read,write}=new Function('localStorage',source+';return {read:readSavedResults,write:writeSavedResults};')(localStorage);
 const state={products:[{id:'test',valor:'10'}],sort:'1',radius:5};write('user-one',state);assert.deepEqual(read('user-one').data,state);assert.equal(read('user-two'),null);
 write('fresh',state,Date.now()-29*60000);assert.deepEqual(read('fresh').data,state);
@@ -25,3 +25,7 @@ render();assert.equal(writes,0);assert.deepEqual(snapshot,cached);
 await new Promise(resolve=>setTimeout(resolve,5));render();assert.equal(writes,0);assert.equal(storage.get('preco-perto-results-v1:hook-user'),original);
 snapshot={...cached,sort:'1'};render();assert.equal(writes,1);assert.equal(read('hook-user').data.sort,'1');
 console.log('PASS: estado vazio não sobrescreve cache e filtro é restaurado sem renovar validade.');
+
+storage.set('preco-perto-results-v1:legacy',JSON.stringify({version:1,savedAt:Date.now(),data:{products:[{desc:'old-unverified-response'}]}}));
+assert.equal(read('legacy'),null);assert.equal(storage.has('preco-perto-results-v1:legacy'),false);
+console.log('PASS: cache anterior à correção é descartado sem alterar a validade de 30 minutos dos resultados novos.');

@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
+process.env.NEXT_PUBLIC_SUPABASE_URL='https://test.supabase.co';process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='test';process.env.SUPABASE_SECRET_KEY='sb_secret_test';
+const {paranaHeaders,assertParanaProducts}=await import('./lib/parana-response.ts');
+const {observation}=await import('./lib/price-history-server.ts');const {storeIdentity}=await import('./lib/latest-offers.ts');
+const {GET}=await import('./app/api/produtos/route.ts');const {GET:categories}=await import('./app/api/categorias/route.ts');
+const {sign,scope}=await import('./lib/credit-server.ts');
+const local='6gkzquw8e',agent='Mozilla/5.0 Firefox/158.0';
+const request=url=>new Request(url,{headers:{'user-agent':agent,cookie:'pp_auth=test','x-search-grant':sign({account:'user:test',scope:scope(new URL(url).searchParams),exp:Date.now()+30000})}});
+assert.deepEqual(paranaHeaders(request('https://site.example/api/produtos?local='+local+'&gtin=80853671')),{Accept:'application/json','User-Agent':agent});
+assert.deepEqual(paranaHeaders(new Request('https://site.example')),{Accept:'application/json'});
+const offer={id:'real',gtin:'80853671',desc:'GOMA MENTOS 92G WINT',datahora:'2026-01-01T12:00:00Z',valor:'22.59',valor_tabela:'22.59',estabelecimento:{nm_emp:'Mercado',nm_logr:'Rua A',nr_logr:'100',mun:'Curitiba',uf:'PR'}};
+assert.doesNotThrow(()=>assertParanaProducts({local,produtos:[offer]},local,'80853671'));
+assert.doesNotThrow(()=>assertParanaProducts({local:'',produtos:[],total:0},local,'80853671'));
+assert.throws(()=>assertParanaProducts({local:'',produtos:[offer]},local,'80853671'));
+assert.throws(()=>assertParanaProducts({local:'other',produtos:[offer]},local,'80853671'));
+assert.throws(()=>assertParanaProducts({local,produtos:[{...offer,gtin:'7891234567895'}]},local,'80853671'));
+let invalid=false,historyWrites=0;
+globalThis.fetch=async(input,init={})=>{
+ const url=String(input.url||input);
+ if(url.includes('/auth/v1/user'))return Response.json({id:'test',email_confirmed_at:'2026-01-01'});
+ if(url.includes('/rpc/record_price_observations')){historyWrites++;return Response.json([]);}
+ const headers=input instanceof Request?input.headers:new Headers(init.headers);
+ assert.equal(headers.get('user-agent'),agent);assert.equal(headers.get('cookie'),null);assert.equal(headers.get('x-search-grant'),null);assert.equal(headers.get('authorization'),null);
+ return Response.json(url.includes('/categorias')?{categorias:[{id:1,desc:'Alimentos',qtd:1}]}:{local:invalid?'':local,produtos:[offer]});
+};
+const url='https://site.example/api/produtos?local='+local+'&raio=22&gtin=80853671&offset=0&ordem=2&data=-1';
+let response=await GET(request(url));assert.equal(response.status,200);assert.equal((await response.json()).produtos[0].desc,'GOMA MENTOS 92G WINT');assert.equal(historyWrites,1);
+invalid=true;response=await GET(request(url));assert.equal(response.status,502);assert.equal(historyWrites,1);
+assert.equal((await categories(request('https://site.example/api/categorias?local='+local+'&termo=mentos'))).status,200);
+const legacyStoreHash=createHash('sha256').update(storeIdentity(offer.estabelecimento)).digest('hex');
+assert.notEqual(observation(offer,'PR').store_key,legacyStoreHash);assert.equal(observation(offer,'BR').store_key,legacyStoreHash);
+console.log('PASS: actual User-Agent forwarded without credentials, inconsistent replies rejected before history writes, empty results preserved and legacy PR history isolated.');

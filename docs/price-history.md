@@ -47,3 +47,8 @@ Nessa recuperação, a lista continua selecionando a nota mais recente por produ
 ## Parâmetros de produtos no Paraná
 
 Buscas por descrição com categoria e por código de barras usam `/api/v1/produtos` com `data=3` e `ordem=0`, tanto no servidor quanto na recuperação pelo navegador. Localização, raio, categoria, GTIN e paginação permanecem os escolhidos na busca. A ordenação visual continua aplicada aos resultados carregados. Combustíveis mantêm suas ordenações existentes.
+
+
+## Código de barras: consulta direta no Paraná
+
+Após reservar o crédito, buscas por GTIN no Paraná consultam primeiro a API oficial no navegador. Uma resposta válida, inclusive sem ofertas, encerra a consulta sem chamar `/api/produtos` do site. Se houver falha de rede, CORS ou dados inconsistentes, há uma única tentativa pelo servidor, com o mesmo crédito; não há nova tentativa direta depois dela. Localização, GTIN e notas mais recentes continuam validados. Como os resultados diretos não passam pelo servidor, essas consultas não gravam nem consultam o histórico compartilhado e indicam histórico indisponível. Buscas por descrição e demais estados mantêm o fluxo anterior.

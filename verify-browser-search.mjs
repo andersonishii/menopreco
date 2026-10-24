@@ -20,11 +20,6 @@ console.log('OK: navegador primeiro, CORS usa servidor sem outro crÃ©dito, nenhu
 clearGrants();let expansionCredits=0,expansionRequests=0;globalThis.fetch=async url=>{if(url==='/api/credits'){expansionCredits++;return Response.json({grant:'description-grant'});}assert.ok(String(url).startsWith('/api/produtos?'));expansionRequests++;return Response.json({produtos:[]});};
 await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&expand=1');await creditFetch('/api/produtos?local=6gf0ffq61&termo=arroz&categoria=1&raio=5&offset=20&expand=1');assert.equal(expansionCredits,1);assert.equal(expansionRequests,2);console.log('PASS: enriquecimento no servidor e paginaÃ§Ã£o usam o mesmo crÃ©dito da descriÃ§Ã£o.');
 
-clearGrants();let historyProductCalls=0;
-globalThis.fetch=async(url,init)=>{if(url==='/api/credits')return Response.json({grant:'history-grant'});assert.ok(String(url).startsWith('/api/produtos?'));assert.equal(init.headers['x-search-grant'],'history-grant');historyProductCalls++;return Response.json({produtos:[]});};
-await creditFetch('/api/produtos?local=6gf0ffq61&gtin=7891234567895&raio=5');assert.equal(historyProductCalls,1);
-console.log('PASS: produtos passam pelo servidor para gravar histÃ³rico confiÃ¡vel, sem receber preÃ§os enviados pelo navegador.');
-
 for(const scenario of ['barcode','description','invalid','offline','auth','processing','national']){
  clearGrants();let credits=0,directCalls=0;
  const local='6gkzquw8e',gtin='7898024394938';
@@ -37,7 +32,7 @@ for(const scenario of ['barcode','description','invalid','offline','auth','proce
   }
   return Response.json({error:'Consulta indisponível',code:scenario==='processing'?'PARANA_PROCESSING_FAILED':'PARANA_UPSTREAM_UNAVAILABLE'},{status:scenario==='auth'?403:502});
  };
- const query=scenario==='description'?'termo=kinder&categoria=1':'gtin='+gtin;
+ const query=['barcode','invalid','offline','national'].includes(scenario)?'gtin='+gtin:'termo=kinder&categoria=1';
  const result=await creditFetch('/api/produtos?local='+local+'&'+query+(scenario==='national'?'&uf=SC':''));
  const recovered=['barcode','description'].includes(scenario);
  assert.equal(result.status,recovered?200:scenario==='auth'?403:502);
@@ -45,3 +40,20 @@ for(const scenario of ['barcode','description','invalid','offline','auth','proce
  if(recovered){const body=await result.json();assert.equal(body.sourceCount,1);assert.equal(body.produtos[0].historyUnavailable,true);}
 }
 console.log('PASS: recuperação PR validada, sem novo crédito ou credenciais externas; falhas de autorização, processamento e outros estados não usam recuperação.');
+
+for(const scenario of ['found','empty','blocked','wrong-gtin']){
+ clearGrants();let credits=0,direct=0,server=0;
+ globalThis.fetch=async(url,init)=>{
+  if(url==='/api/credits'){credits++;return Response.json({grant:'private'});}
+  if(String(url).startsWith('https://menorpreco.')){
+   direct++;assert.equal(init.credentials,'omit');assert.deepEqual(init.headers,{Accept:'application/json'});
+   if(scenario==='blocked')throw new TypeError('CORS');
+   return Response.json({local:'6gkzquw8e',produtos:scenario==='empty'?[]:[{gtin:scenario==='wrong-gtin'?'7898024394938':'7909989354513',valor:'9.99'}]});
+  }
+  server++;assert.equal(init.headers['x-search-grant'],'private');return Response.json({produtos:[],sourceCount:0});
+ };
+ const result=await creditFetch('/api/produtos?local=6gkzquw8e&raio=20&gtin=7909989354513&offset=0');
+ assert.equal(result.status,200);assert.equal(credits,1);assert.equal(direct,1);assert.equal(server,['blocked','wrong-gtin'].includes(scenario)?1:0);
+ const data=await result.json();assert.equal(data.produtos.length,scenario==='found'?1:0);
+}
+console.log('PASS: valid barcode and zero results use one official request; CORS and wrong GTIN use the server once with the same credit.');

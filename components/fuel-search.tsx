@@ -1,4 +1,5 @@
 "use client";
+import {paranaPage} from '../lib/parana-response';
 import {latestStoreOffers} from '../lib/latest-offers';
 import {recentFuelOffers,fuelWithinRadius,fuelPriceDistanceOrder} from '../lib/fuel-order';
 import OfferPrice from './offer-price';
@@ -22,9 +23,9 @@ export default function FuelSearch({local,cityName,onBusy,radius=7,cacheOwner,se
  async function load(next=0,selectedOrder=order){if(busy)return;setRestoredAt(0);setBusy(true);onBusy(true);setError('');setSearched(true);if(!next){setOffers([]);setMore(false);setOffset(0);}try{
  const params=new URLSearchParams({...locationParams(searchLocation||{name:cityName,geohash:local}),local,raio:String(radius),data:'3',ordem:next?requestOrder:selectedOrder==='recent-day'?'2':selectedOrder==='discount'?'0':selectedOrder,tp_comb:fuel,offset:String(next)});
  if(!next)setRequestOrder(params.get('ordem')||'0');
- let data:{produtos?:FuelOffer[];sourceCount?:number}|undefined;let failure:unknown;
+ let data:{produtos?:FuelOffer[];sourceCount?:number;total?:unknown}|undefined;let failure:unknown;
  for(const url of [productEndpoint(searchLocation||{name:cityName,geohash:local})+'?'+params]){try{const response=await creditFetch(url);const body=await response.json();if(!response.ok||!Array.isArray(body.produtos))throw new Error(body.error||'Resposta inválida do serviço de preços.');data=body;break;}catch(e){failure=e;}}
- if(!data)throw failure;const products=data.produtos!;setOffers(old=>latestStoreOffers(next?[...old,...products.filter(p=>!old.some(o=>o.id===p.id))]:products));const sourceCount=data.sourceCount??products.length;setOffset(next+sourceCount);setMore((!searchLocation?.uf||searchLocation.uf==='PR')&&sourceCount>0);
+ if(!data)throw failure;const products=data.produtos!;setOffers(old=>latestStoreOffers(next?[...old,...products.filter(p=>!old.some(o=>o.id===p.id))]:products));const isParana=!searchLocation?.uf||searchLocation.uf==='PR',page=paranaPage(next,{...data,produtos:products});setOffset(isParana?page.nextOffset:next+(data.sourceCount??products.length));setMore(isParana&&page.hasMore);
  }catch(e){setError(e instanceof Error?e.message:'Não foi possível consultar os combustíveis. Tente novamente.');}finally{setBusy(false);onBusy(false);}}
  function changeOrder(value:string){setOrder(value);}
  const visibleOffers=fuelWithinRadius(offers,radius);

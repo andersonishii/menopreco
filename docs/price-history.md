@@ -28,7 +28,7 @@ Também foram verificadas as buscas do Paraná, buscas nacionais, autenticação
 
 ## Ofertas exibidas
 
-Todas as notas válidas retornadas pela API são enviadas ao histórico antes da filtragem. A lista de ofertas mostra somente o registro de data/hora mais recente por GTIN e estabelecimento, mesmo se uma nota anterior tiver preço menor. Registros empatados exatamente na data/hora são preservados. Não se misturam lojas diferentes nem se agrupam produtos apenas pelo nome. A filtragem também se aplica à combinação de páginas e restauração dos resultados de produtos. A paginação avança pela quantidade original da API, não pela quantidade reduzida exibida.
+Todas as notas válidas retornadas pela API são enviadas ao histórico antes da filtragem. A lista de ofertas mostra somente o registro de data/hora mais recente por GTIN e estabelecimento, mesmo se uma nota anterior tiver preço menor. Registros empatados exatamente na data/hora são preservados. Não se misturam lojas diferentes nem se agrupam produtos apenas pelo nome. A filtragem também se aplica à combinação de páginas e restauração dos resultados de produtos. No Paraná, a paginação avança 50 posições por chamada, mesmo quando a API devolve menos ofertas. O total informado pela API encerra a paginação; sem total, uma página vazia encerra a consulta. Agrupamento e seleção da nota mais recente não alteram o offset.
 
 ## Qualidade das respostas do Paraná
 

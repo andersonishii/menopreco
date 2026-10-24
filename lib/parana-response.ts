@@ -13,3 +13,10 @@ export function assertParanaProducts(data:unknown,local:string,gtin?:string|null
  if(body.produtos.length&&typeof body.local==='string'&&body.local!==local)throw new ParanaResponseError('A resposta do Nota Paraná não corresponde à localização consultada.');
  if(gtin&&body.produtos.some(offer=>normalizedGtin(offer?.gtin)!==normalizedGtin(gtin)))throw new ParanaResponseError('A resposta do Nota Paraná não corresponde ao código consultado.');
 }
+
+// The API advances over 50 source positions even when it returns fewer offers.
+export function paranaPage(offset:number,data:{produtos:unknown[];total?:unknown;sourceCount?:number}){
+ const nextOffset=offset+50,count=data.sourceCount??data.produtos.length;
+ const total=typeof data.total==='number'||typeof data.total==='string'&&/^\d+$/.test(data.total)?Number(data.total):null;
+ return{nextOffset,hasMore:count>0&&(total!==null&&Number.isSafeInteger(total)&&total>=0?nextOffset<total:true)};
+}

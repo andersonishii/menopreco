@@ -15,7 +15,7 @@ try{
    assert.equal(p.get('tipo'),kind==='categories'?'categorias':'produtos');assert.equal(p.get('local'),'6gkzqf9vb');assert.equal(p.get('raio'),'7');assert.equal(p.get('offset'),'50');assert.equal(p.get('ordem'),'3');assert.equal(p.get('valor_min'),'24.99');assert.equal(init.method,'POST');assert.equal(init.headers['x-search-grant'],'same-grant');assert.equal(init.credentials,'same-origin');
    return Response.json(kind==='categories'?{categorias:[]}:{produtos:[],sourceCount:0,total:0});
   };
-  assert.equal((await creditFetch(path+'?local=6gkzqf9vb&raio=7&offset=50&ordem=3&valor_min=24.99&valor_max=1499&'+query,false,status=>progress.push(status))).status,200);
+  const connected=await creditFetch(path+'?local=6gkzqf9vb&raio=7&offset=50&ordem=3&valor_min=24.99&valor_max=1499&'+query,false,status=>progress.push(status));assert.equal(connected.status,200);assert.equal(connected.headers.get('X-Preco-Perto-Connection'),'server');
   assert.equal(browser,1);assert.equal(server,1);assert.equal(credits,1);assert.deepEqual(progress,['server','done']);
  }
  for(const failure of ['inconsistent','busy','server-failed']){
@@ -37,6 +37,6 @@ try{
  };
  const query='/api/produtos?local=6gkzqf9vb&gtin=7909989354513';
  assert.equal((await creditFetch(query)).status,200);assert.equal(browser,1);assert.equal(server,2);assert.equal(credits,1);assert.deepEqual(delays.filter(ms=>ms>=6000),[8000]);
- assert.equal((await creditFetch(query)).status,200);assert.equal(browser,2);assert.equal(server,2);
+ const directAgain=await creditFetch(query);assert.equal(directAgain.status,200);assert.equal(directAgain.headers.get('X-Preco-Perto-Connection'),'device');assert.equal(browser,2);assert.equal(server,2);
 }finally{globalThis.setTimeout=timer;clearGrants();}
 console.log('PASS: CORS/network failure switches only that query to Render, preserves all parameters/grant/credit and progress, never falls back for invalid data or explicit throttling, and stops when server fails.');

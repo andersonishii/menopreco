@@ -22,3 +22,8 @@ assert.equal(render(8,undefined),'');
 console.log('PASS: componente real renderiza queda, alta, preço igual, primeiro registro, registro antigo, datas, expansão acessível e indisponibilidade.');
 
 const clientView=render(8,{...history,origin:"client"});assert.ok(clientView.includes("Histórico das suas consultas"));assert.ok(clientView.includes("não foram verificados diretamente na fonte"));
+
+const {default:ConnectionInfo}=await import('./components/connection-info.tsx');
+const connectionView=(source,cached=false)=>renderToStaticMarkup(React.createElement(ConnectionInfo,{source,cached}));
+assert.ok(connectionView('device').includes('IP do seu dispositivo'));assert.ok(connectionView('server').includes('IP do servidor'));assert.ok(connectionView('server',true).includes('Consulta salva'));assert.ok(connectionView('server',true).includes('sem nova consulta'));assert.equal(connectionView(null),'');
+console.log('PASS: discreet connection component distinguishes device, server, cached results and unknown origins.');

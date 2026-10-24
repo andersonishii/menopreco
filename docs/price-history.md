@@ -135,3 +135,10 @@ A rota alternativa exige mesma origem, sessão e grant da conta/consulta, aceita
 O navegador mantém sua fila também durante o acesso alternativo. O usuário vê que a pesquisa continua por uma conexão alternativa. Se a rota alternativa receber um erro que já admite retry de 6/8 segundos, há no máximo uma repetição automática, permanecendo nesse caminho durante a consulta; uma busca posterior começa novamente pelo navegador. Não há nova cobrança de crédito. Se o servidor também falhar, o erro é apresentado sem alternância contínua entre IPs.
 
 Ofertas válidas obtidas pelo servidor alimentam o mesmo histórico privado da conta antes de selecionar a nota mais recente. Esse histórico continua separado do conjunto verificado compartilhado, pois também contém dados anteriores enviados pelo navegador. O cancelamento do pedido ao Render é propagado para a chamada externa quando ela sair da fila. O caminho alternativo pode falhar ou ser bloqueado no serviço de origem; não garante desbloqueio por IP.
+
+
+## Indicação discreta da conexão
+
+O creditFetch anota a origem efetiva da última tentativa no cabeçalho interno `X-Preco-Perto-Connection` (`device` ou `server`), sem modificar o corpo ou o status. A consulta direta continua marcada como dispositivo mesmo quando o histórico é enviado ao servidor. O fallback e as buscas nacionais são marcados como servidor. O cabeçalho não é enviado ao Nota Paraná.
+
+A busca principal e os combustíveis exibem uma linha pequena junto aos resultados. A lista de compras identifica cada item separadamente. A indicação é salva no cache e restaurada como “Consulta salva”, sem afirmar que ocorreu uma chamada nova; caches antigos sem origem conhecida não recebem rótulo presumido. Ao tentar um item salvo novamente, sua indicação deixa de ser tratada como cache. Nenhum serviço de descoberta de IP é consultado e nenhum IP numérico é mostrado ou armazenado para essa indicação.

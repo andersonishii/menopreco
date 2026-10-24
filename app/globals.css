@@ -121,3 +121,5 @@ html{scroll-behavior:smooth;scroll-padding-top:24px}body{font-size:16px;line-hei
 .discount-price .history-unavailable{display:block!important;font-size:12px!important;font-weight:400;color:#6c766f;margin-top:8px}
 
 .heading .search-price-summary{margin:6px 0 0;padding:0;font-size:13px;line-height:1.6;color:#607063}.search-price-summary strong{font-weight:600;color:inherit;font-variant-numeric:tabular-nums}.search-price-summary-scope{font-size:12px}
+
+.heading .connection-info,.connection-info{display:block;margin:5px 0 8px;font-size:12px;line-height:1.5;font-weight:400;color:#68756b}

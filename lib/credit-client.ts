@@ -2,6 +2,7 @@
 import {paranaFetch} from './parana-browser';
 import {queueParanaRequest} from './parana-queue';
 import {saveClientPriceHistory} from './price-history-client';
+import {markConnection} from './connection';
 const grants=new Map<string,string>();
 let queue:Promise<unknown>=Promise.resolve();
 const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'|uf:'+p.get('uf')+'|lat:'+Number(p.get('latitude'))+'|lon:'+Number(p.get('longitude')):p.get('local'),p.get('tp_comb')?'fuel:'+p.get('tp_comb'):p.get('gtin')?'gtin:'+p.get('gtin'):'term:'+p.get('termo')?.trim()].join('|');
@@ -35,10 +36,10 @@ export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state
     if(retryGrant&&grants.get(scope)===retryGrant){onCategoryRetry?.('retrying');response=await attempt();}
    }finally{onCategoryRetry?.('done');}
   }
-  return response;
+  return markConnection(response,usingServer?'server':'device');
  }
  const response=await fetch(target.pathname+target.search,{headers:{'x-search-grant':grants.get(scope)!},signal:AbortSignal.timeout(target.searchParams.get('expand')==='1'?180000:30000)});
  if(response.status===401||response.status===403){grants.delete(scope);window.dispatchEvent(new CustomEvent('account-required'));}if(response.status===428)window.dispatchEvent(new CustomEvent('mpbr-connection-required'));
- return response;
+ return markConnection(response,'server');
 }
 export function clearGrants(){grants.clear()}

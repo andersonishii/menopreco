@@ -12,7 +12,7 @@ A rota autenticada `/api/bahia/produtos` valida a consulta e envia POST form-url
 | Maior preço | `ordenar=preco.desc` |
 | Vendas mais recentes | `ordenar=data.desc` |
 | Menor distância | `ordenar=distancia.asc` |
-| Menor preço do dia ou mais recente | `data.desc`, seguido da comparação local por dia/preço |
+| Menor preço do dia ou mais recente | `data.desc`, seguido da ordenação local por preço crescente nas ofertas carregadas |
 | Descrição / barras | `termo` / `gtin` |
 | Combustível | `anp=GASOLINA`, `ETANOL`, `DIESEL`, `GNV` |
 | Localização / raio | `latitude`, `longitude`, `raio` (1–30 km) |

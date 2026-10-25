@@ -1,6 +1,7 @@
+import {parsePriceBounds} from './price-bounds';
 import {isRegionalProvider,regionalServiceName} from './search-provider';
 import {queueParanaRequest} from './parana-queue';
-import {assertParanaProducts,ParanaResponseError,paranaBusyResponse,paranaOffset,paranaPriceRange,paranaProductsUrl} from './parana-response';
+import {assertParanaProducts,ParanaResponseError,paranaBusyResponse,paranaOffset,paranaProductsUrl} from './parana-response';
 import {readDescriptionResponse} from './description-response';
 import {latestStoreOffers} from './latest-offers';
 class BrowserAccessError extends Error{}
@@ -22,10 +23,9 @@ export async function paranaFetch(request:Request,enrich?:(offers:any[])=>Promis
   if(!['0','1','2','3'].includes(ordem)||!/^\d+$/.test(offset))return json({error:'Página ou ordenação inválida.'},400);
   if(fuel!==null&&!['1','2','3','4','5'].includes(fuel))return json({error:'Combustível inválido.'},400);
   if(fuel===null&&(gtin?!/^(\d{8}|\d{12,14})$/.test(gtin):(!termo||termo.length>120||!categoria||!/^\d+$/.test(categoria))))return json({error:'Código de barras ou descrição e categoria inválidos.'},400);
-  const hasRange=query.has('valor_min')||query.has('valor_max'),range=hasRange?paranaPriceRange({min:query.get('valor_min'),max:query.get('valor_max')}):null;
-  if(hasRange&&!range)return json({error:'Faixa de preços inválida.'},400);
+  let bounds:Record<string,string>;try{bounds=parsePriceBounds(query.get('valor_min'),query.get('valor_max'));}catch(error){return json({error:(error as Error).message},400);}
   const params=new URLSearchParams({local,raio,offset:String(paranaOffset(offset)),data:'3',ordem,...(fuel?{tp_comb:fuel}:gtin?{gtin}:{termo:termo!,categoria:categoria!})});
-  if(range){params.set('valor_min',range.min);params.set('valor_max',range.max);}
+  for(const [key,value] of Object.entries(bounds))params.set(key,value);
   upstream=paranaProductsUrl(params);
  }
  try{

@@ -1,5 +1,6 @@
 "use client";
 import {useState} from 'react';
+import {unavailableStates} from '../lib/state-coverage';
 import {isRegionalProvider,regionalStates} from '../lib/search-provider';
 type CoverageProps={states:{sigla:string;nome:string}[];statesStatus:'loading'|'ready'|'error';onRetryStates:()=>void};
 export default function LandingIntro({states,statesStatus,onRetryStates}:CoverageProps){
@@ -21,6 +22,7 @@ export default function LandingIntro({states,statesStatus,onRetryStates}:Coverag
 export function LandingDetails(){return <section className="landing-details" aria-labelledby="landing-details-title"><div><span className="landing-kicker">ANTES DE COMPRAR, COMPARE</span><h2 id="landing-details-title">Mais contexto para<br/>escolher melhor.</h2><p>Preço, data e localização juntos para ajudar você a decidir onde comprar.</p></div><div className="landing-faq"><details><summary>Que tipos de produtos posso pesquisar?</summary><p>Você pode buscar alimentos, medicamentos, eletrodomésticos, roupas, calçados e outros produtos, além de combustíveis. Uma geladeira, um sapato ou um pacote de meias também podem entrar na sua comparação. Os resultados dependem dos registros de notas fiscais disponíveis na região escolhida.</p></details><details><summary>Esses são os preços de agora?</summary><p>São preços registrados em notas fiscais. Mostramos a data do registro para ajudar na comparação. Os valores e a disponibilidade podem mudar; confirme com a loja antes de comprar.</p></details><details><summary>Preciso compartilhar minha localização?</summary><p>Você pode informar estado e cidade manualmente. Ao permitir a localização do dispositivo, também pode comparar pela distância. Sem essa permissão, as buscas partem da região central da cidade escolhida.</p></details><details><summary>Como funcionam as consultas?</summary><p>Cada conta pode escolher 2 consultas gratuitas no primeiro uso. Depois, o pacote de 10 consultas custa R$ 5,00, sem assinatura. A comparação na internet é complementar às ofertas locais.</p></details><details><summary>Por que um preço pode ter desconto?</summary><p>O desconto registrado pode depender de fidelidade, cupom, forma de pagamento ou outras condições da compra. Ele pode não estar disponível para todos os clientes.</p></details><details><summary>O serviço está disponível na minha cidade?</summary><p>Após entrar, escolha um dos estados participantes e a sua cidade. A quantidade de ofertas depende dos dados disponíveis na região. No Paraná e em Pernambuco, as consultas não exigem conexão gov.br. Nos demais estados participantes, é necessário conectar sua conta gov.br ao Menor Preço Brasil. A conta do Preço Perto é necessária em ambos os casos.</p></details></div></section>;}
 
 export function LandingCoverage({states,statesStatus,onRetryStates}:CoverageProps){
+ const unavailable=statesStatus==='ready'?unavailableStates(states):[];
  const national=states.filter(state=>!isRegionalProvider(state.sigla)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
  return <section className="landing-coverage" aria-labelledby="coverage-title">
   <div className="coverage-heading"><div><span className="landing-kicker">ANTES DE COMEÇAR</span><h2 id="coverage-title">Onde você pode comparar?</h2></div><p>Veja os estados atendidos e o que você precisa para consultar os preços.</p></div>
@@ -31,6 +33,7 @@ export function LandingCoverage({states,statesStatus,onRetryStates}:CoverageProp
     <span className="coverage-footnote">O login gov.br acontece no ambiente oficial do governo.</span>
    </article>
   </div>
+  {unavailable.length>0&&<article className="coverage-unavailable" aria-labelledby="coverage-unavailable-title"><h3 id="coverage-unavailable-title">Ainda não disponíveis no Preço Perto</h3><p>As buscas por notas fiscais ainda não estão habilitadas nesses estados.</p><ul className="coverage-states" aria-label="Estados ainda não disponíveis">{unavailable.map(state=><li key={state.sigla}>{state.nome} <span>{state.sigla}</span></li>)}</ul></article>}
   <p className="coverage-note">A disponibilidade de produtos e lojas varia conforme as notas fiscais da região. A lista de estados é atualizada a partir do serviço de consulta.</p>
  </section>;
 }

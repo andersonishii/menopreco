@@ -1,0 +1,14 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {loader,runtime}=require('../helpers.cjs');
+const load=loader();
+const {brazilStates,unavailableStates}=load('lib/state-coverage.ts');
+const {LandingCoverage}=load('components/landing-intro.tsx');
+const React=runtime('react'),{renderToStaticMarkup}=runtime('react-dom/server');
+const render=(states,status='ready')=>renderToStaticMarkup(React.createElement(LandingCoverage,{states,statesStatus:status,onRetryStates:()=>{}}));
+test('Catalog covers all 26 states and DF once',()=>{assert.equal(brazilStates.length,27);assert.equal(new Set(brazilStates.map(s=>s.sigla)).size,27);});
+test('Unavailable states are derived dynamically, with PR/PE always available',()=>{const unavailable=unavailableStates([{sigla:'SC'},{sigla:'RJ'}]);for(const uf of ['PR','PE','SC','RJ'])assert.ok(!unavailable.some(s=>s.sigla===uf));assert.ok(unavailable.some(s=>s.sigla==='SP'));assert.ok(unavailable.some(s=>s.sigla==='MG'));assert.deepEqual(unavailable,unavailable.toSorted((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')));});
+test('Newly enabled state disappears from unavailable list',()=>{assert.ok(unavailableStates([]).some(s=>s.sigla==='SP'));assert.ok(!unavailableStates([{sigla:'SP'}]).some(s=>s.sigla==='SP'));assert.deepEqual(unavailableStates(brazilStates),[]);});
+test('Landing labels unavailable states without mixing them with enabled states',()=>{const html=render([{sigla:'SC',nome:'Santa Catarina'}]);const section=html.slice(html.indexOf('<article class="coverage-unavailable"'),html.indexOf('<p class="coverage-note"'));assert.ok(section.includes('São Paulo'));assert.ok(section.includes('Minas Gerais'));assert.ok(!section.includes('Santa Catarina'));assert.ok(!section.includes('Pernambuco'));assert.ok(!section.includes('Paraná'));});
+for(const status of ['loading','error'])test('Does not label states unavailable when availability is '+status,()=>assert.ok(!render([],status).includes('coverage-unavailable-title')));
+test('No unavailable section when every state is enabled',()=>assert.ok(!render(brazilStates).includes('coverage-unavailable-title')));

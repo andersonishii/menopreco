@@ -25,6 +25,7 @@ Foi verificado com um teste temporário propositalmente quebrado que o comando d
 | Arquivo | Regras |
 | --- | --- |
 | `parana.test.cjs` | Categorias obrigatórias; zero resultados; rejeição de listas inesperadas; endpoint oficial, ordens 0–3 e data=3; descrição/código/combustível; offset de 50; limite de páginas; mínimo/máximo; resposta inconsistente; histórico antes da seleção da última nota. |
+| `pernambuco.test.cjs` | Geohash GPS/município, categorias e produtos regionais, seletor sem duplicatas, dispensa de gov.br, autorização e histórico de PE. |
 | `brasil.test.cjs` | Somente UFs com possuiModulo=true; descrição direta; PorGtin para barras; combustível; coordenadas e UF; normalização de preço/desconto; expansão GTIN limitada; falhas parciais; token individual, renovação e reconexão gov.br. |
 | `client-flow.test.cjs` | Dispositivo primeiro; fallback CORS para servidor; uma repetição após 6 ou 8 segundos; cancelamento; crédito reutilizado entre ordenação/páginas; fila sem simultaneidade, deduplicação de chamadas e cooldown. |
 | `common.test.cjs` | Preço pago/tabela/desconto; agrupamento por GTIN; deduplicação; nota mais recente por loja; ordenação local e complementação por extremos comprovados; lista de compras; combustíveis dentro do raio; calendário de Brasília; filtros de distância somente com GPS; cache de 30 minutos por conta. |

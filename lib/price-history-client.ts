@@ -3,7 +3,7 @@ const fields=['gtin','datahora','valor','valor_tabela','valor_desconto'] as cons
 const storeFields=['uf','mun','nm_logr','nr_logr','complemento','nm_compl','nm_emp','nm_fan'] as const;
 export async function saveClientPriceHistory<T extends HistoricalOffer>(offers:T[],target:URL,grant:string):Promise<T[]>{
  const metadata=new Map<number,PriceHistory>(),query=new URLSearchParams();
- for(const name of ['local','termo','gtin','tp_comb']){const value=target.searchParams.get(name);if(value!==null)query.set(name,value);}
+ for(const name of ['local','uf','termo','gtin','tp_comb']){const value=target.searchParams.get(name);if(value!==null)query.set(name,value);}
  const batches=Array.from({length:Math.ceil(Math.min(offers.length,200)/50)},(_,index)=>index*50);let cursor=0;
  await Promise.all(Array.from({length:Math.min(2,batches.length)},async()=>{while(cursor<batches.length){
   const start=batches[cursor++],payload=offers.slice(start,start+50).map(offer=>({...Object.fromEntries(fields.map(name=>[name,offer[name]])),...(offer.estabelecimento?{estabelecimento:Object.fromEntries(storeFields.map(name=>[name,offer.estabelecimento![name]]))}:{})}));

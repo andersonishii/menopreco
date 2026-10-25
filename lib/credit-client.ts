@@ -1,15 +1,17 @@
 "use client";
+import {isRegionalProvider} from './search-provider';
+
 import {paranaFetch} from './parana-browser';
 import {queueParanaRequest} from './parana-queue';
 import {saveClientPriceHistory} from './price-history-client';
 import {markConnection} from './connection';
 const grants=new Map<string,string>();
 let queue:Promise<unknown>=Promise.resolve();
-const key=(p:URLSearchParams)=>[p.get('uf')&&p.get('uf')!=='PR'?p.get('local')+'|uf:'+p.get('uf')+'|lat:'+Number(p.get('latitude'))+'|lon:'+Number(p.get('longitude')):p.get('local'),p.get('tp_comb')?'fuel:'+p.get('tp_comb'):p.get('gtin')?'gtin:'+p.get('gtin'):'term:'+p.get('termo')?.trim()].join('|');
+const key=(p:URLSearchParams)=>[p.get('uf')==='PE'?p.get('local')+'|uf:PE':!isRegionalProvider(p.get('uf'))?p.get('local')+'|uf:'+p.get('uf')+'|lat:'+Number(p.get('latitude'))+'|lon:'+Number(p.get('longitude')):p.get('local'),p.get('tp_comb')?'fuel:'+p.get('tp_comb'):p.get('gtin')?'gtin:'+p.get('gtin'):'term:'+p.get('termo')?.trim()].join('|');
 export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state:'device'|'waiting'|'retrying'|'server'|'done',seconds?:number)=>void):Promise<Response>{const target=new URL(url,location.origin),scope=key(target.searchParams);if(reset)grants.delete(scope);if(!grants.has(scope)){
  const run=queue.then(async()=>{if(grants.has(scope))return;const r=await fetch('/api/credits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:crypto.randomUUID(),params:Object.fromEntries(target.searchParams)})});const data=await r.json();window.dispatchEvent(new CustomEvent('credits-changed'));if(!r.ok){if(data.code==='MPBR_CONNECTION_REQUIRED')window.dispatchEvent(new CustomEvent('mpbr-connection-required'));if(r.status===402||r.status===401)window.dispatchEvent(new CustomEvent('account-required'));throw new Error(data.error||'Não foi possível iniciar a consulta.');}grants.set(scope,data.grant);});queue=run.catch(()=>{});await run;
  }
- const parana=['/api/categorias','/api/produtos'].includes(target.pathname)&&(!target.searchParams.get('uf')||target.searchParams.get('uf')==='PR');
+ const parana=['/api/categorias','/api/produtos'].includes(target.pathname)&&isRegionalProvider(target.searchParams.get('uf'));
  if(parana){
   let usingServer=false;
   const serverFetch=async()=>{

@@ -11,7 +11,7 @@ function loader(stubs={}){
   file=path.resolve(root,file);
   if(cache.has(file))return cache.get(file).exports;
   const module={exports:{}};cache.set(file,module);
-  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022}}).outputText;
+  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;
   const localRequire=id=>{
    if(Object.hasOwn(stubs,id))return stubs[id];
    if(!id.startsWith('.'))return runtime(id);

@@ -15,7 +15,7 @@ import GooglePrices from './google-prices';
 import BarcodeCamera from './barcode-camera';
 import {creditFetch} from '../lib/credit-client';
 import {chooseShoppingOffer,type PricePolicy,type ShoppingOffer as Offer} from '../lib/shopping-price';
-const policyLabels={discount:'Maior desconto concedido (R$)',distance:'Menor distância e menor preço',cheapest:'Sempre o menor preço',today:'Menor preço — notas emitidas hoje',recent:'Menor preço do dia ou o mais recente possível'};
+const policyLabels={discount:'Maior desconto concedido (R$)',distance:'Menor distância',cheapest:'Sempre o menor preço',today:'Menor preço — notas emitidas hoje',recent:'Menor preço do dia ou o mais recente possível'};
 
 type Item={connection?:ConnectionSource|null;connectionCached?:boolean;code:string;quantity:number;status:'pending'|'found'|'empty'|'error';offer?:Offer;price?:number;priceVariation?:boolean;unusualPrice?:boolean;error?:string};
 const money=(cents:number)=>(cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});

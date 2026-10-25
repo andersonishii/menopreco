@@ -14,6 +14,6 @@ for(const [file,id,value] of [['fuel-search','fuel-order','recent-day'],['shoppi
  const Component=load('components/'+file+'.tsx').default;
  const render=location=>renderToStaticMarkup(React.createElement(Component,{local:location.geohash,cityName:location.name,searchLocation:location,onBusy:()=>{}}));
  const html=render(manual),select=html.match(new RegExp('<select[^>]*id="'+id+'"[\\s\\S]*?</select>'))?.[0];assert.ok(select);assert.match(select,new RegExp('value="'+value+'" selected=""'));assert.ok(!select.includes('Menor distância'));assert.ok(!html.includes('Deseja adicionar uma tolerância'));
- assert.ok(render(gps).includes('Menor distância e menor preço'));
+ assert.ok(render(gps).includes('Menor distância'));
 }
 console.log('PASS: componentes reais renderizados com preço recente padrão; cidade manual sem filtro de distância; GPS válido disponibiliza distância.');

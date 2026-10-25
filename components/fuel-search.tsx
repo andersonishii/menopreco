@@ -16,7 +16,7 @@ import {fuelPriceVariations,type Store} from '../lib/offer-details';
 import {useEffect,useState} from 'react';
 type FuelOffer={id:string;gtin?:string;datahora?:string;desc:string;valor:string;valor_tabela:string;valor_desconto?:string;tempo:string;distkm:string;estabelecimento:Store};
 const fuels=[['1','Gasolina'],['2','Gasolina aditivada'],['3','Etanol'],['4','Diesel'],['5','GNV']];
-const orders=[['recent-day','Menor preço do dia ou o mais recente possível'],['0','Menor preço'],['3','Maior preço'],['2','Vendas mais recentes'],['1','Menor distância e menor preço'],['discount','Maior desconto concedido (R$)']];
+const orders=[['recent-day','Menor preço do dia ou o mais recente possível'],['0','Menor preço'],['3','Maior preço'],['2','Vendas mais recentes'],['1','Menor distância'],['discount','Maior desconto concedido (R$)']];
 export default function FuelSearch({minimumPrice='',maximumPrice='',local,cityName,onBusy,radius=7,cacheOwner,searchLocation}:{minimumPrice?:string;maximumPrice?:string;searchLocation?:SearchLocation;cacheOwner?:string|null;radius?:number;local:string;cityName:string;onBusy:(busy:boolean)=>void}){
  const [activePriceBounds,setActivePriceBounds]=useState<PriceBounds>({});
  const [queryConnection,setQueryConnection]=useState<ConnectionSource|null>(null),[connectionCached,setConnectionCached]=useState(false);

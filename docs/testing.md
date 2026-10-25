@@ -25,6 +25,7 @@ Foi verificado com um teste temporário propositalmente quebrado que o comando d
 | Arquivo | Regras |
 | --- | --- |
 | `parana.test.cjs` | Categorias obrigatórias; zero resultados; rejeição de listas inesperadas; endpoint oficial, ordens 0–3 e data=3; descrição/código/combustível; offset de 50; limite de páginas; mínimo/máximo; resposta inconsistente; histórico antes da seleção da última nota. |
+| `device-location.test.cjs` | Coordenadas do navegador, identificação de Ponta Grossa/PR, disponibilidade regional independente do MPBR, erros distintos e diagnóstico discreto. |
 | `price-bounds.test.cjs` | Limites opcionais PR/PE, vírgula/ponto, limites parciais, validação, preservação da paginação e exclusão dos demais estados. |
 | `pernambuco.test.cjs` | Geohash GPS/município, categorias e produtos regionais, seletor sem duplicatas, dispensa de gov.br, autorização e histórico de PE. |
 | `brasil.test.cjs` | Somente UFs com possuiModulo=true; descrição direta; PorGtin para barras; combustível; coordenadas e UF; normalização de preço/desconto; expansão GTIN limitada; falhas parciais; token individual, renovação e reconexão gov.br. |

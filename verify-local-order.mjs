@@ -1,20 +1,27 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,n){return s.startsWith('.')&&!/\.[a-z]+$/i.test(s)?n(s+'.ts',c):n(s,c)}});
+const {needsOrderRefresh}=await import('./lib/result-order.ts');
 const source=fs.readFileSync('app/page.tsx','utf8');
-const code=source.slice(source.indexOf('function localOnlyOrder'),source.indexOf('type Product=Offer;')).replace('value:string','value');
-const isLocal=new Function(code+';return localOnlyOrder;')();
-assert.equal(isLocal('discount'),true);assert.equal(isLocal('offers-asc'),true);assert.equal(isLocal('1'),false);
-const start=source.slice(source.indexOf('const options='),source.indexOf('const resultOptions='));assert.ok(!start.includes("value:'discount'"));
-assert.ok(source.includes("const resultOptions=[...options,{value:'discount'"));
+const offers=[{id:'a',valor:'10'},{id:'b',valor:'20'}];
+const range={min:'5',max:'30'};
+for(const order of ['1','2','recent-day','discount','offers-asc','offers-desc'])assert.equal(needsOrderRefresh(order,offers,range,[]),false);
+for(const order of ['0','3']){
+ assert.equal(needsOrderRefresh(order,offers,null,[]),false);
+ assert.equal(needsOrderRefresh(order,offers,range,[order]),false);
+ assert.equal(needsOrderRefresh(order,offers,range,[]),true);
+ assert.equal(needsOrderRefresh(order,offers,{min:'10',max:'20'},[]),false);
+}
 const handler=source.slice(source.indexOf('function changeOrder'),source.indexOf('function changeMode')).replace('value:string','value');
-const makeHandler=new Function('context', 'const {busy,setSort,setOfferOrders,step,city,load,category}=context;'+code+';'+handler+';return changeOrder;');
-for(const value of ['0','1','2','3','recent-day','discount','offers-asc','offers-desc']){
- const calls=[],category={id:37};let selected;
- const change=makeHandler({busy:false,step:3,city:{uf:'PR'},category,setSort:value=>selected=value,setOfferOrders:()=>{},load:(...args)=>calls.push(args)});
- change(value);assert.equal(selected,value);
- assert.deepEqual(calls,isLocal(value)?[]:[[category,0,value]]);
+const makeHandler=new Function('context','const {busy,setSort,setOfferOrders,step,products,priceRange,queriedOrders,needsOrderRefresh,load,category,term}=context;'+handler+';return changeOrder;');
+for(const bounds of [null,range,{min:'10',max:'20'}])for(const order of ['0','1','2','3','recent-day','discount','offers-asc']){
+ let selected;const calls=[];const category={id:37};
+ makeHandler({busy:false,step:3,products:offers,priceRange:bounds,queriedOrders:[],needsOrderRefresh,term:'sapato',category,setSort:v=>selected=v,setOfferOrders:()=>{},load:(...args)=>calls.push(args)})(order);
+ assert.equal(selected,order);
+ assert.deepEqual(calls,needsOrderRefresh(order,offers,bounds,[])?[[category,0,order,'sapato',true]]:[]);
 }
-for(const context of [{busy:true,step:3,city:{uf:'PR'}},{busy:false,step:1,city:{uf:'PR'}},{busy:false,step:3,city:{uf:'SC'}}]){
- const calls=[];makeHandler({...context,category:{id:37},setSort:()=>{},setOfferOrders:()=>{},load:(...args)=>calls.push(args)})('3');assert.equal(calls.length,0);
-}
-console.log('PASS: filtros oficiais atualizam a busca na página zero; desconto e contagem continuam locais; estados, categoria e bloqueio durante busca respeitados.');
+assert.ok(source.includes('id="order" value={searchOrder}'));
+assert.ok(source.includes('uniqueOffers(next||merge?[...old,...data.produtos]:data.produtos)'));
+assert.ok(source.includes('failedRefresh||requestOrder,term,!!failedRefresh'));
+console.log('PASS: local result ordering, authoritative bounds, one supplemental fetch per order, independent search selector, merge and retry.');

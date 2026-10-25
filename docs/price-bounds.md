@@ -4,6 +4,7 @@ Na área de busca, os estados Paraná e Pernambuco exibem campos opcionais de pr
 
 - Aceita mínimo, máximo ou ambos; em branco mantém o comportamento anterior.
 - Aceita vírgula ou ponto decimal, sem separador de milhares. `1,00` e `1` são enviados como `1.00`.
+- Ao sair do campo, completa duas casas e normaliza para ponto: `3` → `3.00`, `2,9` → `2.90`. Campos vazios continuam opcionais. O envio à API usa sempre ponto.
 - Os campos permitem no máximo duas casas decimais ao digitar ou colar. Valores restaurados nos campos também são limitados. A precisão de três casas dos intervalos automáticos recebidos da API continua preservada no adaptador.
 - Valores negativos, texto, mais de R$ 1.000.000 e mínimo maior que máximo são rejeitados antes da consulta/crédito.
 - Categorias não recebem esses parâmetros. A consulta posterior de produtos recebe `valor_min` e/ou `valor_max`.

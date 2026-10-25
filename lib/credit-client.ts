@@ -40,7 +40,7 @@ export async function creditFetch(url:string,reset=false,onCategoryRetry?:(state
   }
   return markConnection(response,usingServer?'server':'device');
  }
- const response=await fetch(target.pathname+target.search,{headers:{'x-search-grant':grants.get(scope)!},signal:AbortSignal.timeout(target.searchParams.get('expand')==='1'?180000:30000)});
+ const response=await fetch(target.pathname+target.search,{headers:{'x-search-grant':grants.get(scope)!},signal:AbortSignal.timeout(target.pathname==='/api/bahia/produtos'?60000:target.searchParams.get('expand')==='1'?180000:30000)});
  if(response.status===401||response.status===403){grants.delete(scope);window.dispatchEvent(new CustomEvent('account-required'));}if(response.status===428)window.dispatchEvent(new CustomEvent('mpbr-connection-required'));
  return markConnection(response,'server');
 }

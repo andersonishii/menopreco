@@ -1,6 +1,6 @@
-# Limites opcionais de preço (PR e PE)
+# Limites opcionais de preço (PR, PE e BA)
 
-Na área de busca, os estados Paraná e Pernambuco exibem campos opcionais de preço mínimo e máximo. Eles se aplicam à busca por descrição, código de barras/câmera, combustíveis e lista de compras. Nos demais estados, não são exibidos nem enviados ao MPBR.
+Na área de busca, os estados Paraná, Pernambuco e Bahia exibem campos opcionais de preço mínimo e máximo. Eles se aplicam à busca por descrição, código de barras/câmera, combustíveis e lista de compras. Nos demais estados, não são exibidos nem enviados ao MPBR.
 
 - Aceita mínimo, máximo ou ambos; em branco mantém o comportamento anterior.
 - Aceita vírgula ou ponto decimal, sem separador de milhares. `1,00` e `1` são enviados como `1.00`.
@@ -13,3 +13,5 @@ Na área de busca, os estados Paraná e Pernambuco exibem campos opcionais de pr
 - Sem limites informados, a primeira página continua sem filtro manual; nas páginas seguintes a busca por descrição continua usando o intervalo retornado pela API, como antes. Limites manuais têm prioridade sobre esse intervalo automático.
 
 Validação e serialização compartilhadas: `lib/price-bounds.ts`. Testes automáticos: `tests/unit/price-bounds.test.cjs` e casos de busca/paginação em `ui.test.cjs`. Nenhuma alteração no banco é necessária.
+
+Na Bahia, o adaptador traduz os limites manuais para `precomin` e `precomax`. O intervalo recebido não vira filtro automático nas páginas seguintes; essa regra automática permanece exclusiva de PR/PE. Veja `docs/bahia-integration.md`.

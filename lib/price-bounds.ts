@@ -1,4 +1,4 @@
-import {isRegionalProvider} from './search-provider';
+import {supportsPriceBounds,isRegionalProvider} from './search-provider';
 import {paranaRangeParams,type ParanaPriceRange} from './parana-response';
 export type PriceBounds=Record<string,string>;
 // Limit user-entered currency fields without changing three-decimal API ranges.
@@ -22,7 +22,7 @@ export function parsePriceBounds(minimum:unknown,maximum:unknown):PriceBounds{
 }
 export function savedPriceBounds(value:unknown):PriceBounds{try{const bounds=value as PriceBounds|null;return parsePriceBounds(bounds?.valor_min,bounds?.valor_max);}catch{return{};}}
 export function regionalPriceParams(uf:string|undefined,bounds:PriceBounds,offset=0,range:ParanaPriceRange|null=null):PriceBounds{
- if(!isRegionalProvider(uf))return{};
+ if(!supportsPriceBounds(uf))return{};
  const selected=savedPriceBounds(bounds);
- return Object.keys(selected).length?selected:paranaRangeParams(offset,range);
+ return Object.keys(selected).length?selected:isRegionalProvider(uf)?paranaRangeParams(offset,range):{};
 }

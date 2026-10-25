@@ -85,3 +85,7 @@ Buscas por descrição complementam os GTINs encontrados com consultas por códi
 
 
 Revisão de produção em 23/10/2026: ver `security/RELATORIO.md` para falhas corrigidas, evidência de RLS, testes e pendências operacionais. O webhook agora exige MERCADO_PAGO_WEBHOOK_SECRET e assinatura com timestamp válido. A aplicação publicada pelo Render utiliza Next.js 16.4.2, CSP com nonce por resposta e limites locais de requisição. A complementação de descrição tem limites de GTIN/páginas/tempo e avisa quando parcial. Não usar o antigo servidor de desenvolvimento como servidor público.
+
+## Bahia
+
+Integração própria com Preço da Hora, sem gov.br, para descrição, barras, combustível e lista de compras. Inclui ordenações, raio, período, categorias, limites de preço e paginação nativa. Não exige nova variável ou migração. [Contrato e validação](docs/bahia-integration.md). O build padrão do Render executa os testes antes de compilar.

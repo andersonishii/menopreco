@@ -45,3 +45,7 @@ Usa `node:test` e `node:assert`, sem adicionar dependências. O TypeScript já i
 Esses testes verificam contratos e regras da aplicação com respostas controladas; não garantem disponibilidade das APIs externas nem substituem testes de câmera, login real, acessibilidade visual ou migrações no banco.
 
 As verificações avulsas `verify-*.mjs` e a pasta `diagnostico` continuam disponíveis, mas não são executadas indiscriminadamente no build: algumas exigem serviços reais ou um servidor em execução.
+
+## Bahia
+
+`bahia.test.cjs` cobre as quatro ordenações oficiais, descrição, GTIN, combustíveis, período, categorias, preços, localização, paginação nativa, normalização e histórico isolado. Inclui autorização, sessão por conta, CSRF e interrupção em bloqueios. `ui.test.cjs` verifica handlers reais de descrição, combustível e lista com filtros preservados nas páginas e repetições. Contrato e evidência real em `docs/bahia-integration.md`.

@@ -4,7 +4,7 @@ Na área de busca, os estados Paraná e Pernambuco exibem campos opcionais de pr
 
 - Aceita mínimo, máximo ou ambos; em branco mantém o comportamento anterior.
 - Aceita vírgula ou ponto decimal, sem separador de milhares. `1,00` e `1` são enviados como `1.00`.
-- Permite até 3 casas para preços de combustível, preservando a precisão já aceita pelo adaptador.
+- Os campos permitem no máximo duas casas decimais ao digitar ou colar. Valores restaurados nos campos também são limitados. A precisão de três casas dos intervalos automáticos recebidos da API continua preservada no adaptador.
 - Valores negativos, texto, mais de R$ 1.000.000 e mínimo maior que máximo são rejeitados antes da consulta/crédito.
 - Categorias não recebem esses parâmetros. A consulta posterior de produtos recebe `valor_min` e/ou `valor_max`.
 - Cada pesquisa congela os limites aplicados. Alterar os campos afeta a próxima busca, sem mudar silenciosamente as páginas dos resultados já abertos.

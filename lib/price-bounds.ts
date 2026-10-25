@@ -1,6 +1,14 @@
 import {isRegionalProvider} from './search-provider';
 import {paranaRangeParams,type ParanaPriceRange} from './parana-response';
 export type PriceBounds=Record<string,string>;
+// Limit user-entered currency fields without changing three-decimal API ranges.
+export function priceInputValue(value:string,previous=''){
+ const text=value.trim();
+ if(!/^\d*(?:[.,]\d*)?$/.test(text))return previous;
+ const separator=text.search(/[.,]/);
+ return separator<0?text:text.slice(0,separator+3);
+}
+
 export function parsePriceBounds(minimum:unknown,maximum:unknown):PriceBounds{
  const parse=(value:unknown)=>{const text=String(value??'').trim();if(!text)return null;if(!/^\d{1,7}(?:[.,]\d{1,3})?$/.test(text)||Number(text.replace(',','.'))>1000000)throw new Error('Informe preços válidos, de R$ 0,00 a R$ 1.000.000,00, sem separador de milhares.');const decimal=text.replace(',','.');return Number(decimal).toFixed((decimal.split('.')[1]?.length||0)>2?3:2);};
  const min=parse(minimum),max=parse(maximum);

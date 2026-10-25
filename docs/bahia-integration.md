@@ -23,7 +23,7 @@ A rota autenticada `/api/bahia/produtos` valida a consulta e envia POST form-url
 
 Período e limites de preço também atendem combustíveis e lista de compras. As categorias da descrição são descobertas na resposta e selecionadas para a próxima busca. Gasolina segue a família oficial; não há opção inventada de gasolina aditivada separada.
 
-Desconto e quantidade de ofertas são ordenações locais. A ordenação dos resultados reaproveita os dados carregados, com a regra compartilhada de complementação por extremos. Os filtros ficam congelados por pesquisa, inclusive nas páginas, repetição e cache de 30 minutos. Editar os campos afeta a próxima busca.
+Desconto e quantidade de ofertas são ordenações locais. A ordenação dos resultados é exclusivamente local, sem nova consulta, inclusive quando faltam extremos globais. O seletor superior define somente a próxima busca. Os filtros ficam congelados por pesquisa, inclusive nas páginas, repetição e cache de 30 minutos. Editar os campos afeta a próxima busca.
 
 A paginação respeita `totalPaginas`, inclusive quando o serviço limita páginas apesar de um total maior de registros. Não usa offsets de 50 nem o número de cartões agrupados. O intervalo de preços da resposta é informativo; não vira filtro automático na Bahia.
 

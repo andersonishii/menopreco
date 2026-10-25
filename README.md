@@ -17,6 +17,10 @@ A página inicial será o comparador completo. A versão do Render usa Next.js c
 
 Localmente: entre em `render-app`, execute `npm ci`, `npm run build` e `npm start`, e acesse http://localhost:3000.
 
+## Testes automáticos
+
+Execute `npm test` na raiz ou em `render-app`. A suíte cobre as regras do Paraná, Menor Preço Brasil e regras comuns, sem acessar APIs ou banco reais. Todo `npm run build` executa os testes antes da compilação e é interrompido se houver falha. Veja [a documentação dos testes](docs/testing.md).
+
 ## Diagnóstico da API
 
 A pasta `diagnostico` continua disponível separadamente. Para publicá-la, use Root Directory `diagnostico`, Build Command `node --check server.mjs` e Start Command `npm start`. Ela não é a página inicial do comparador.
